@@ -532,7 +532,8 @@ function toggleChunk(dk,id){
 
 /* ---------- SCHEDULES ---------- */
 function renderSchedules(){
-  let html=`<button class="btn btn-primary btn-block" style="margin-bottom:14px" onclick="openScheduleModal()">＋ New schedule</button>`;
+  let html=`<button class="btn btn-primary btn-block" style="margin-bottom:8px" onclick="openScheduleModal()">＋ New schedule</button>
+    <button class="btn btn-soft btn-block" style="margin-bottom:14px" onclick="openScanModal()">📷 Scan a schedule photo (with Claude)</button>`;
   if(state.schedules.length===0){
     html+=`<div class="card"><div class="empty"><div class="big">🗓️</div>
       <p>Schedules are your fixed commitments — school periods, work shifts, practice. Add one and I'll plan around it.</p>
@@ -567,6 +568,66 @@ function renderSchedules(){
 function deleteSchedule(id){ if(!confirm("Delete this schedule and all its blocks?"))return; state.schedules=state.schedules.filter(s=>s.id!==id); invalidatePlans(); render(); }
 function deleteBlock(sid,bid){ const s=state.schedules.find(x=>x.id===sid); if(!s)return; s.blocks=s.blocks.filter(b=>b.id!==bid); invalidatePlans(); render(); }
 function invalidatePlans(){ state.plans={}; }
+
+/* ---------- photo scan via Claude ---------- */
+const SCAN_PROMPT=`Look at the attached photo of my schedule (it may be a work schedule, class timetable, shift roster, or calendar). Convert it into StudyFlow import format.
+
+Reply with ONLY a json code block in exactly this shape, no other text:
+
+{"studyflowSchedule":{"name":"<short name, e.g. Work or School>","color":"<one of: lav, sky, mint, peach, rose, butter>","blocks":[{"label":"<short label, e.g. Shift or Classes>","days":[<day numbers 0-6, where 0=Sunday, 1=Monday ... 6=Saturday>],"start":"<HH:MM 24-hour>","end":"<HH:MM 24-hour>"}]}}
+
+Rules:
+- Combine days that share the same start and end time into one block.
+- Use 24-hour times (e.g. 17:00, not 5 PM).
+- If the photo shows specific dates instead of weekdays, map each date to its weekday.
+- Only include actual scheduled commitments, not breaks or days off.
+- If part of the photo is unreadable, make your best guess and add "label" text noting it.`;
+function openScanModal(){
+  openModal(`<h3>📷 Scan a schedule photo</h3>
+    <p class="muted" style="margin-bottom:10px">Turn a photo of any schedule into StudyFlow blocks using the free Claude app — two copy-pastes:</p>
+    <p class="muted" style="margin-bottom:6px"><b>1.</b> Copy this prompt:</p>
+    <textarea id="scanPrompt" readonly style="min-height:80px;font-size:11px">${esc(SCAN_PROMPT)}</textarea>
+    <button class="btn btn-soft btn-block" style="margin:8px 0 14px" onclick="copyScanPrompt()">📋 Copy prompt</button>
+    <p class="muted" style="margin-bottom:6px"><b>2.</b> Open the <b>Claude app</b>, attach your schedule photo, paste the prompt, and send.</p>
+    <p class="muted" style="margin-bottom:6px"><b>3.</b> Copy Claude's reply and paste it here:</p>
+    <textarea id="scanResult" placeholder='Paste Claude&#39;s reply here…'></textarea>
+    <button class="btn btn-primary btn-block" style="margin-top:8px" onclick="importScan()">✨ Import schedule</button>`);
+}
+function copyScanPrompt(){
+  const ta=document.getElementById("scanPrompt");
+  ta.focus(); ta.select(); ta.setSelectionRange(0,999999);
+  let ok=false;
+  try{ ok=document.execCommand("copy"); }catch(e){}
+  if(navigator.clipboard){ navigator.clipboard.writeText(SCAN_PROMPT).then(()=>toast("Prompt copied — now open the Claude app 📋")).catch(()=>toast(ok?"Prompt copied 📋":"Select the text and copy it manually")); }
+  else toast(ok?"Prompt copied 📋":"Select the text and copy it manually");
+}
+function importScan(){
+  const raw=document.getElementById("scanResult").value;
+  if(!raw.trim()){ toast("Paste Claude's reply first"); return; }
+  let text=raw.replace(/```[a-z]*\n?/gi,"");
+  const a=text.indexOf("{"), b=text.lastIndexOf("}");
+  if(a===-1||b<=a){ toast("Hmm, I can't find the schedule data in that reply"); return; }
+  let data;
+  try{ data=JSON.parse(text.slice(a,b+1)); }catch(e){ toast("That doesn't look like valid schedule data — copy Claude's whole reply"); return; }
+  let s=data.studyflowSchedule||data;
+  let blocks=Array.isArray(s)?s:(s.blocks||[]);
+  const name=(!Array.isArray(s)&&s.name)?String(s.name).slice(0,40):"Scanned schedule";
+  const validColors=COLORS.map(c=>c.key);
+  const color=validColors.includes(s.color)?s.color:validColors[state.schedules.length%validColors.length];
+  const clean=[]; const timeRe=/^([01]?\d|2[0-3]):[0-5]\d$/;
+  for(const b2 of blocks){
+    if(!b2||!timeRe.test(b2.start||"")||!timeRe.test(b2.end||"")) continue;
+    let days=(Array.isArray(b2.days)?b2.days:[]).map(Number).filter(d=>Number.isInteger(d)&&d>=0&&d<=6);
+    if(!days.length) continue;
+    let start=b2.start, end=b2.end;
+    if(t2m(end)<=t2m(start)) end="23:59"; // overnight shifts get clipped to end of day
+    clean.push({id:uid(),label:String(b2.label||"").slice(0,40),days:[...new Set(days)].sort(),start,end});
+  }
+  if(!clean.length){ toast("No usable time blocks found — double-check Claude's reply"); return; }
+  state.schedules.push({id:uid(),name,color,blocks:clean});
+  invalidatePlans(); closeModal(); render();
+  toast("✨ Imported \""+name+"\" with "+clean.length+" block"+(clean.length>1?"s":"")+" — check it looks right!");
+}
 
 let modalDays=[];
 function openScheduleModal(){
