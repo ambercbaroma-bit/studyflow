@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>StudyFlow — Balanced Day Planner</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#faf8f5">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="StudyFlow">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>
+  :root{
+    --bg:#faf8f5; --card:#ffffff; --ink:#3d3a50; --ink-soft:#8a86a3; --ink-faint:#b8b5cc;
+    --lav:#e6e1f7; --lav-deep:#8b7ec8; --mint:#dcefe6; --mint-deep:#5ba888;
+    --peach:#fbe8dd; --peach-deep:#e08d5f; --rose:#f9e3e8; --rose-deep:#d4708b;
+    --sky:#e0edf7; --sky-deep:#5f93c0; --butter:#faf1d8; --butter-deep:#c9a23f;
+    --line:#efecf6; --shadow:0 2px 12px rgba(100,90,140,.08);
+    --r:18px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    background:var(--bg); color:var(--ink); font-size:15px; line-height:1.45;
+  }
+  #app{max-width:560px;margin:0 auto;min-height:100%;display:flex;flex-direction:column}
+  header{padding:20px 20px 8px}
+  .hrow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .savebtn{
+    display:inline-flex;align-items:center;gap:6px;border:none;cursor:pointer;font-family:inherit;
+    background:var(--lav);color:#5b4fa0;font-size:13px;font-weight:800;border-radius:12px;padding:9px 14px;
+    transition:background .2s,color .2s;
+  }
+  .savebtn svg{width:16px;height:16px}
+  .savebtn.saved{background:var(--mint);color:#2e7a5c}
+  .disclaimer{
+    display:flex;align-items:flex-start;gap:8px;margin-top:12px;
+    background:var(--butter);border:1px solid #eddfb0;border-radius:14px;padding:10px 12px;
+    font-size:12px;color:#7a5f14;line-height:1.45;
+  }
+  .disclaimer button{background:none;border:none;cursor:pointer;color:#a8924a;font-size:14px;padding:0 2px;flex:none;line-height:1.2}
+  .disclaimer.ok{background:var(--mint);border-color:#c3e2d3;color:#2e7a5c}
+  .disclaimer.ok button{color:#69a98c}
+  header h1{font-size:22px;font-weight:800;letter-spacing:-.3px}
+  header h1 span{color:var(--lav-deep)}
+  header p{color:var(--ink-soft);font-size:13px;margin-top:2px}
+  main{flex:1;padding:10px 16px 96px;overflow-x:hidden}
+
+  /* bottom nav */
+  nav{
+    position:fixed;bottom:0;left:0;right:0;z-index:50;
+    background:rgba(255,255,255,.94);backdrop-filter:blur(10px);
+    border-top:1px solid var(--line);display:flex;justify-content:center;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  nav .inner{display:flex;width:100%;max-width:560px}
+  nav button{
+    flex:1;background:none;border:none;padding:10px 4px 12px;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    color:var(--ink-faint);font-size:11px;font-weight:600;font-family:inherit;
+  }
+  nav button.active{color:var(--lav-deep)}
+  nav button svg{width:22px;height:22px}
+
+  .card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;margin-bottom:14px;border:1px solid var(--line)}
+  .card h2{font-size:15px;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .muted{color:var(--ink-soft);font-size:13px}
+  .tiny{color:var(--ink-faint);font-size:11.5px}
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    border:none;border-radius:14px;padding:11px 16px;font-size:14px;font-weight:700;
+    cursor:pointer;font-family:inherit;transition:transform .08s ease, opacity .15s;
+  }
+  .btn:active{transform:scale(.97)}
+  .btn-primary{background:var(--lav-deep);color:#fff}
+  .btn-soft{background:var(--lav);color:#5b4fa0}
+  .btn-mint{background:var(--mint-deep);color:#fff}
+  .btn-ghost{background:transparent;color:var(--ink-soft);border:1.5px dashed var(--ink-faint)}
+  .btn-danger{background:var(--rose);color:#b2496a}
+  .btn-sm{padding:7px 12px;font-size:12.5px;border-radius:11px}
+  .btn-block{width:100%}
+  .row{display:flex;gap:10px;align-items:center}
+  .row.wrap{flex-wrap:wrap}
+  .grow{flex:1}
+
+  label.fld{display:block;margin-bottom:10px}
+  label.fld span{display:block;font-size:12px;font-weight:700;color:var(--ink-soft);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
+  input[type=text],input[type=date],input[type=time],input[type=number],select{
+    width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:12px;
+    font-size:15px;font-family:inherit;color:var(--ink);background:#fdfcff;outline:none;
+    appearance:none;-webkit-appearance:none;min-height:44px;
+  }
+  input:focus,select:focus{border-color:var(--lav-deep)}
+  select{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%238a86a3' stroke-width='2' fill='none' stroke-linecap='round'/></svg>");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+
+  /* day pills */
+  .daypills{display:flex;gap:6px;flex-wrap:wrap}
+  .daypills button{
+    border:1.5px solid var(--line);background:#fdfcff;color:var(--ink-soft);
+    border-radius:10px;padding:8px 0;width:42px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;
+  }
+  .daypills button.on{background:var(--lav-deep);border-color:var(--lav-deep);color:#fff}
+
+  /* color dots */
+  .dots{display:flex;gap:10px}
+  .dots button{width:30px;height:30px;border-radius:50%;border:3px solid transparent;cursor:pointer}
+  .dots button.on{border-color:var(--ink)}
+
+  /* chips */
+  .chip{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:4px 11px;font-size:12px;font-weight:700}
+  .chip.lav{background:var(--lav);color:#5b4fa0}
+  .chip.mint{background:var(--mint);color:#2e7a5c}
+  .chip.peach{background:var(--peach);color:#b56230}
+  .chip.rose{background:var(--rose);color:#b2496a}
+  .chip.sky{background:var(--sky);color:#35678f}
+  .chip.butter{background:var(--butter);color:#8f6f1d}
+
+  /* timeline */
+  .tl{position:relative;padding-left:64px}
+  .tl-item{position:relative;margin-bottom:10px;border-radius:14px;padding:12px 13px;border:1px solid var(--line)}
+  .tl-time{position:absolute;left:-64px;top:12px;width:54px;text-align:right;font-size:11.5px;font-weight:700;color:var(--ink-soft);line-height:1.3}
+  .tl-time small{display:block;font-weight:600;color:var(--ink-faint)}
+  .tl-item.fixed{background:linear-gradient(0deg,rgba(255,255,255,.55),rgba(255,255,255,.55))}
+  .tl-item.study{background:#fff}
+  .tl-item.break{background:transparent;border:1.5px dashed var(--line);padding:8px 13px}
+  .tl-item.freetime{background:transparent;border:1.5px dashed #cfe8db;padding:8px 13px}
+  .tl-item .t-title{font-weight:800;font-size:14px}
+  .tl-item .t-sub{font-size:12px;color:var(--ink-soft);margin-top:1px}
+  .tl-bar{position:absolute;left:0;top:0;bottom:0;width:5px;border-radius:14px 0 0 14px}
+  .tl-item.now{outline:2px solid var(--lav-deep);outline-offset:1px}
+
+  .checkwrap{display:flex;align-items:flex-start;gap:10px}
+  .checkbox{
+    flex:none;width:26px;height:26px;border-radius:9px;border:2px solid var(--ink-faint);
+    background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:1px;
+  }
+  .checkbox.done{background:var(--mint-deep);border-color:var(--mint-deep)}
+  .checkbox svg{width:15px;height:15px;stroke:#fff;stroke-width:3;fill:none;opacity:0}
+  .checkbox.done svg{opacity:1}
+  .strike .t-title{text-decoration:line-through;color:var(--ink-faint)}
+
+  /* stat tiles */
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 10px;text-align:center;box-shadow:var(--shadow)}
+  .stat b{display:block;font-size:19px;font-weight:800}
+  .stat span{font-size:11px;color:var(--ink-soft);font-weight:600}
+
+  .progress-outer{height:10px;background:var(--lav);border-radius:99px;overflow:hidden}
+  .progress-inner{height:100%;background:var(--lav-deep);border-radius:99px;transition:width .4s ease}
+
+  /* task list */
+  .task-item{display:flex;gap:10px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}
+  .task-item:last-child{border-bottom:none}
+  .task-main{flex:1;min-width:0}
+  .task-title{font-weight:700;font-size:14.5px;word-wrap:break-word}
+  .task-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px}
+  .mini-progress{height:5px;background:var(--line);border-radius:99px;overflow:hidden;margin-top:8px}
+  .mini-progress i{display:block;height:100%;background:var(--mint-deep);border-radius:99px}
+  .icon-btn{background:none;border:none;cursor:pointer;padding:6px;color:var(--ink-faint)}
+  .icon-btn svg{width:17px;height:17px}
+
+  /* schedule blocks */
+  .sched-group{margin-bottom:14px}
+  .block-line{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+  .block-line:last-child{border-bottom:none}
+  .block-dot{width:10px;height:10px;border-radius:50%;flex:none}
+  .block-info{flex:1;min-width:0}
+  .block-info b{font-size:13.5px}
+  .block-info .tiny{display:block}
+
+  .empty{
+    text-align:center;padding:28px 16px;color:var(--ink-soft);
+  }
+  .empty .big{font-size:34px;margin-bottom:8px}
+  .empty p{font-size:13.5px;max-width:280px;margin:0 auto 14px}
+
+  .datebar{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+  .datebar .btn-sm{min-width:44px}
+  .datebar .dlabel{flex:1;text-align:center}
+  .datebar .dlabel b{display:block;font-size:15px}
+  .datebar .dlabel span{font-size:11.5px;color:var(--ink-soft)}
+
+  .overflow-note{background:var(--peach);border-radius:14px;padding:12px 14px;font-size:13px;color:#8a4a1e;margin-bottom:12px}
+  .balance-note{background:var(--mint);border-radius:14px;padding:12px 14px;font-size:13px;color:#2e7a5c;margin-bottom:12px}
+
+  textarea{
+    width:100%;min-height:110px;border:1.5px solid var(--line);border-radius:12px;padding:11px 12px;
+    font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--ink);background:#fdfcff;outline:none;resize:vertical;
+  }
+  .warn{background:var(--butter);border-radius:14px;padding:12px 14px;font-size:13px;color:#7a5f14;margin-bottom:12px}
+
+  .seg{display:flex;background:var(--lav);border-radius:13px;padding:4px;margin-bottom:14px}
+  .seg button{flex:1;border:none;background:transparent;border-radius:10px;padding:8px 6px;font-size:13px;font-weight:700;color:#5b4fa0;cursor:pointer;font-family:inherit}
+  .seg button.on{background:#fff;box-shadow:0 1px 4px rgba(100,90,140,.15)}
+
+  .toast{
+    position:fixed;left:50%;transform:translateX(-50%);bottom:86px;z-index:99;
+    background:var(--ink);color:#fff;padding:10px 18px;border-radius:99px;font-size:13px;font-weight:600;
+    opacity:0;pointer-events:none;transition:opacity .25s;max-width:90%;text-align:center;
+  }
+  .toast.show{opacity:1}
+  .modal-back{position:fixed;inset:0;background:rgba(61,58,80,.4);z-index:60;display:none;align-items:flex-end;justify-content:center}
+  .modal-back.show{display:flex}
+  .modal{background:var(--card);border-radius:22px 22px 0 0;width:100%;max-width:560px;max-height:88vh;overflow-y:auto;padding:20px 18px calc(20px + env(safe-area-inset-bottom))}
+  .modal h3{font-size:17px;font-weight:800;margin-bottom:14px}
+  .handle{width:40px;height:4px;border-radius:99px;background:var(--line);margin:0 auto 14px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="hrow">
+      <div>
+        <h1>Study<span>Flow</span></h1>
+        <p id="headerSub">Your balanced day, planned for you</p>
+      </div>
+      <button class="savebtn" id="saveBtn" onclick="tempSave()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+        Save
+      </button>
+    </div>
+    <div class="disclaimer" id="disclaimer">
+      <span>⚠️ <b>Temporary save only.</b> Your data is kept while this app stays open, but it <b>won't save between sessions</b>. Use <b>Export backup</b> in Settings to keep it for next time.</span>
+      <button onclick="dismissDisclaimer()" aria-label="Dismiss">✕</button>
+    </div>
+  </header>
+  <main id="main"></main>
+  <nav><div class="inner">
+    <button data-tab="today" onclick="go('today')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      Today
+    </button>
+    <button data-tab="schedules" onclick="go('schedules')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
+      Schedules
+    </button>
+    <button data-tab="tasks" onclick="go('tasks')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>
+      Tasks
+    </button>
+    <button data-tab="data" onclick="go('data')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5h.1a1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      Settings
+    </button>
+  </div></nav>
+  <div class="toast" id="toast"></div>
+  <div class="modal-back" id="modalBack" onclick="if(event.target===this)closeModal()"><div class="modal" id="modalBody"></div></div>
+</div>
+
+<script>
+"use strict";
+/* ============================== STATE ============================== */
+const COLORS = [
+  {key:"lav",   dot:"#8b7ec8", bg:"#e6e1f7", text:"#5b4fa0"},
+  {key:"sky",   dot:"#5f93c0", bg:"#e0edf7", text:"#35678f"},
+  {key:"mint",  dot:"#5ba888", bg:"#dcefe6", text:"#2e7a5c"},
+  {key:"peach", dot:"#e08d5f", bg:"#fbe8dd", text:"#b56230"},
+  {key:"rose",  dot:"#d4708b", bg:"#f9e3e8", text:"#b2496a"},
+  {key:"butter",dot:"#c9a23f", bg:"#faf1d8", text:"#8f6f1d"},
+];
+const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const uid = () => Math.random().toString(36).slice(2,10);
+
+let state = {
+  settings: { dayStart:"07:00", dayEnd:"22:30", focusLen:45, breakLen:10, buffer:10 },
+  schedules: [],   // {id,name,color,blocks:[{id,label,days:[],start,end}]}
+  tasks: [],       // {id,title,subject,due,est,priority,doneMin,completed}
+  plans: {},       // dateKey -> {items:[...], doneChunks:{chunkId:true}}
+  viewDate: todayKey(),
+  tab: "today",
+};
+
+function todayKey(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function keyToDate(k){ const [y,m,d]=k.split("-").map(Number); return new Date(y,m-1,d); }
+function shiftDate(k,delta){ const d=keyToDate(k); d.setDate(d.getDate()+delta); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function t2m(t){ const [h,m]=t.split(":").map(Number); return h*60+m; }
+function m2t(m){ m=((m%1440)+1440)%1440; let h=Math.floor(m/60), mm=m%60, ap=h>=12?"PM":"AM"; h=h%12||12; return h+":"+String(mm).padStart(2,"0")+" "+ap; }
+function durFmt(min){ if(min>=60){ const h=Math.floor(min/60), m=min%60; return m? h+"h "+m+"m" : h+"h"; } return min+"m"; }
+function esc(s){ return String(s??"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function colorOf(key){ return COLORS.find(c=>c.key===key) || COLORS[0]; }
+
+/* ============================== PLANNER ============================== */
+function fixedEventsFor(dateKey){
+  const dow = keyToDate(dateKey).getDay();
+  const evs = [];
+  for(const s of state.schedules)
+    for(const b of s.blocks)
+      if(b.days.includes(dow))
+        evs.push({ label:b.label||s.name, sched:s.name, color:s.color, start:t2m(b.start), end:t2m(b.end) });
+  evs.sort((a,b)=>a.start-b.start);
+  return evs;
+}
+function mergeSpans(evs){
+  const out=[];
+  for(const e of evs){
+    const last=out[out.length-1];
+    if(last && e.start<=last.end) last.end=Math.max(last.end,e.end);
+    else out.push({start:e.start,end:e.end});
+  }
+  return out;
+}
+function pendingTasks(){
+  return state.tasks.filter(t=>!t.completed && (t.est - t.doneMin) > 0);
+}
+function sortTasksForPlan(tasks, dateKey){
+  return [...tasks].sort((a,b)=>{
+    const ad=a.due||"9999-12-31", bd=b.due||"9999-12-31";
+    if(ad!==bd) return ad<bd?-1:1;
+    if(a.priority!==b.priority) return b.priority-a.priority;
+    return (a.est-a.doneMin)-(b.est-b.doneMin);
+  });
+}
+function buildPlan(dateKey){
+  const st=state.settings;
+  const dayStart=t2m(st.dayStart), dayEnd=t2m(st.dayEnd);
+  const focus=Math.max(15,+st.focusLen||45), brk=Math.max(0,+st.breakLen||10), buf=Math.max(0,+st.buffer||0);
+  const fixed=fixedEventsFor(dateKey);
+  const merged=mergeSpans(fixed);
+
+  // planning start: if planning today, don't schedule into the past
+  let planFrom=dayStart;
+  if(dateKey===todayKey()){
+    const now=new Date();
+    const nowMin=now.getHours()*60+now.getMinutes();
+    if(nowMin>dayStart) planFrom=Math.ceil(nowMin/5)*5;
+  }
+
+  // free gaps
+  const gaps=[];
+  let cursor=Math.max(dayStart,planFrom);
+  for(const s of merged){
+    if(s.end<=cursor){ continue; }
+    if(s.start>cursor) gaps.push({start:cursor,end:Math.min(s.start,dayEnd)});
+    cursor=Math.max(cursor,s.end+buf);
+    if(cursor>=dayEnd) break;
+  }
+  if(cursor<dayEnd) gaps.push({start:cursor,end:dayEnd});
+  const validGaps=gaps.filter(g=>g.end-g.start>=15);
+
+  // task queue: remaining minutes per task
+  const queue=sortTasksForPlan(pendingTasks(),dateKey).map(t=>({task:t,left:t.est-t.doneMin}));
+  const items=[]; let chunkNo=0;
+  for(const g of validGaps){
+    let pos=g.start;
+    while(pos<g.end && queue.length){
+      const room=g.end-pos;
+      if(room<15) break;
+      const cur=queue[0];
+      let len=Math.min(focus,cur.left,room);
+      // avoid orphan slivers: if what would remain of the task is <10, absorb it (up to room)
+      if(cur.left-len>0 && cur.left-len<10 && len+ (cur.left-len) <= room) len=cur.left;
+      if(len<15 && cur.left>=15) break; // room too small for a real session
+      items.push({ kind:"study", id:"c"+(chunkNo++)+"_"+cur.task.id, taskId:cur.task.id,
+                   title:cur.task.title, subject:cur.task.subject, priority:cur.task.priority,
+                   due:cur.task.due, start:pos, end:pos+len });
+      cur.left-=len; pos+=len;
+      if(cur.left<=0) queue.shift();
+      if(pos<g.end && queue.length && brk>0 && (g.end-pos)>=(15+brk)){
+        items.push({ kind:"break", id:"b"+(chunkNo++), start:pos, end:pos+brk });
+        pos+=brk;
+      }
+    }
+  }
+  // drop trailing break
+  while(items.length && items[items.length-1].kind==="break") items.pop();
+
+  const unfit=queue.map(q=>({title:q.task.title,left:q.left}));
+  return { items, unfit, fixed, gaps:validGaps, planFrom };
+}
+function ensurePlan(dateKey,force){
+  if(force || !state.plans[dateKey]){
+    const p=buildPlan(dateKey);
+    const old=state.plans[dateKey];
+    state.plans[dateKey]={ items:p.items, unfit:p.unfit, doneChunks:(old&&!force)?old.doneChunks:{}, generatedAt:Date.now() };
+    if(force) state.plans[dateKey].doneChunks={};
+  }
+  return state.plans[dateKey];
+}
+
+/* ============================== RENDER ============================== */
+const main=document.getElementById("main");
+function go(tab){ state.tab=tab; render(); window.scrollTo(0,0); }
+function render(){
+  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active",b.dataset.tab===state.tab));
+  const subs={today:"Your balanced day, planned for you",schedules:"Your fixed commitments",tasks:"Everything on your plate",data:"Settings & saving your data"};
+  document.getElementById("headerSub").textContent=subs[state.tab];
+  if(state.tab==="today") renderToday();
+  else if(state.tab==="schedules") renderSchedules();
+  else if(state.tab==="tasks") renderTasks();
+  else renderData();
+  persist();
+}
+
+/* ---------- TODAY ---------- */
+function renderToday(){
+  const dk=state.viewDate;
+  const d=keyToDate(dk);
+  const isToday=dk===todayKey();
+  const plan=ensurePlan(dk);
+  const fixed=fixedEventsFor(dk);
+
+  // merge fixed + plan items into one timeline
+  const timeline=[
+    ...fixed.map(f=>({kind:"fixed",...f})),
+    ...plan.items
+  ].sort((a,b)=>a.start-b.start);
+
+  const studyItems=plan.items.filter(i=>i.kind==="study");
+  const plannedMin=studyItems.reduce((s,i)=>s+(i.end-i.start),0);
+  const doneMin=studyItems.filter(i=>plan.doneChunks[i.id]).reduce((s,i)=>s+(i.end-i.start),0);
+  const fixedMin=mergeSpans(fixed).reduce((s,g)=>s+(g.end-g.start),0);
+  const windowMin=t2m(state.settings.dayEnd)-t2m(state.settings.dayStart);
+  const freeMin=Math.max(0,windowMin-fixedMin-plannedMin);
+  const pct=plannedMin?Math.round(doneMin/plannedMin*100):0;
+  const nowMin=(new Date()).getHours()*60+(new Date()).getMinutes();
+
+  const dueToday=state.tasks.filter(t=>!t.completed&&t.due===dk).length;
+  const overdue=state.tasks.filter(t=>!t.completed&&t.due&&t.due<todayKey()).length;
+
+  let html=`
+    <div class="datebar">
+      <button class="btn btn-soft btn-sm" onclick="changeDate(-1)">‹</button>
+      <div class="dlabel">
+        <b>${isToday?"Today":["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][d.getDay()]}</b>
+        <span>${d.toLocaleDateString(undefined,{month:"long",day:"numeric",year:"numeric"})}</span>
+      </div>
+      <button class="btn btn-soft btn-sm" onclick="changeDate(1)">›</button>
+    </div>`;
+
+  if(state.schedules.length===0 && state.tasks.length===0){
+    html+=`<div class="card"><div class="empty">
+      <div class="big">🌱</div>
+      <p><b>Welcome to StudyFlow!</b><br>Add your fixed schedules (school, work…) and your tasks, and I'll build you a balanced day.</p>
+      <div class="row" style="justify-content:center;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="go('schedules')">Add a schedule</button>
+        <button class="btn btn-soft" onclick="loadExample()">Try example data</button>
+      </div>
+    </div></div>`;
+    main.innerHTML=html; return;
+  }
+
+  html+=`
+    <div class="stats">
+      <div class="stat"><b style="color:var(--sky-deep)">${durFmt(fixedMin)||"0m"}</b><span>Commitments</span></div>
+      <div class="stat"><b style="color:var(--lav-deep)">${durFmt(plannedMin)||"0m"}</b><span>Study planned</span></div>
+      <div class="stat"><b style="color:var(--mint-deep)">${durFmt(freeMin)||"0m"}</b><span>Free time</span></div>
+    </div>`;
+
+  if(plannedMin>0){
+    html+=`<div class="card">
+      <div class="row" style="justify-content:space-between;margin-bottom:8px">
+        <b style="font-size:14px">Progress</b><span class="muted">${durFmt(doneMin)} / ${durFmt(plannedMin)} · ${pct}%</span>
+      </div>
+      <div class="progress-outer"><div class="progress-inner" style="width:${pct}%"></div></div>
+      ${(dueToday||overdue)?`<div class="row wrap" style="margin-top:10px;gap:6px">
+        ${overdue?`<span class="chip rose">⚠ ${overdue} overdue</span>`:""}
+        ${dueToday?`<span class="chip peach">${dueToday} due today</span>`:""}
+      </div>`:""}
+    </div>`;
+  }
+
+  if(plan.unfit && plan.unfit.length){
+    html+=`<div class="overflow-note"><b>Heads up:</b> not everything fits ${isToday?"today":"this day"}. Still unplaced: ${plan.unfit.map(u=>esc(u.title)+" ("+durFmt(u.left)+")").join(", ")}. Consider spreading these across other days or trimming estimates.</div>`;
+  } else if(plannedMin>0 && freeMin>=60){
+    html+=`<div class="balance-note">🌿 Nice balance — everything fits with <b>${durFmt(freeMin)}</b> of free time left to recharge.</div>`;
+  }
+
+  html+=`<div class="row" style="margin-bottom:12px">
+    <button class="btn btn-primary grow" onclick="regeneratePlan()">↻ Re-plan this day</button>
+  </div>`;
+
+  if(timeline.length===0){
+    html+=`<div class="card"><div class="empty"><div class="big">☀️</div><p>Nothing on this day yet. Add tasks or schedule blocks, then re-plan.</p></div></div>`;
+  } else {
+    html+=`<div class="card"><h2>📋 Day plan</h2><div class="tl">`;
+    for(const it of timeline){
+      const isNow=isToday&&nowMin>=it.start&&nowMin<it.end;
+      const time=`<div class="tl-time">${m2t(it.start)}<small>${m2t(it.end)}</small></div>`;
+      if(it.kind==="fixed"){
+        const c=colorOf(it.color);
+        html+=`<div class="tl-item fixed ${isNow?"now":""}" style="background:${c.bg}66">${time}
+          <div class="tl-bar" style="background:${c.dot}"></div>
+          <div style="padding-left:8px">
+            <div class="t-title" style="color:${c.text}">${esc(it.label)}</div>
+            <div class="t-sub">${esc(it.sched)} · ${durFmt(it.end-it.start)}</div>
+          </div></div>`;
+      } else if(it.kind==="study"){
+        const done=!!state.plans[dk].doneChunks[it.id];
+        const dueTag=it.due?(it.due<todayKey()?`<span class="chip rose">overdue</span>`:it.due===dk?`<span class="chip peach">due today</span>`:""):"";
+        html+=`<div class="tl-item study ${isNow?"now":""} ${done?"strike":""}">${time}
+          <div class="tl-bar" style="background:var(--lav-deep)"></div>
+          <div class="checkwrap" style="padding-left:8px">
+            <div class="checkbox ${done?"done":""}" onclick="toggleChunk('${dk}','${it.id}')"><svg viewBox="0 0 24 24"><path d="M5 13l4 4 10-10"/></svg></div>
+            <div class="grow">
+              <div class="t-title">${esc(it.title)}</div>
+              <div class="t-sub">${it.subject?esc(it.subject)+" · ":""}${durFmt(it.end-it.start)} focus ${dueTag}</div>
+            </div>
+          </div></div>`;
+      } else if(it.kind==="break"){
+        html+=`<div class="tl-item break">${time}<div class="t-sub" style="padding-left:8px">☕ Break — ${durFmt(it.end-it.start)}</div></div>`;
+      }
+    }
+    html+=`</div></div>`;
+  }
+  main.innerHTML=html;
+}
+function changeDate(d){ state.viewDate=shiftDate(state.viewDate,d); ensurePlan(state.viewDate); render(); }
+function regeneratePlan(){ ensurePlan(state.viewDate,true); render(); toast("Plan refreshed ✨"); }
+function toggleChunk(dk,id){
+  const plan=state.plans[dk]; if(!plan) return;
+  const item=plan.items.find(i=>i.id===id); if(!item) return;
+  const min=item.end-item.start;
+  const task=state.tasks.find(t=>t.id===item.taskId);
+  if(plan.doneChunks[id]){
+    delete plan.doneChunks[id];
+    if(task){ task.doneMin=Math.max(0,task.doneMin-min); task.completed=false; }
+  } else {
+    plan.doneChunks[id]=true;
+    if(task){
+      task.doneMin=Math.min(task.est,task.doneMin+min);
+      if(task.doneMin>=task.est){ task.completed=true; toast("🎉 \""+task.title+"\" complete!"); }
+    }
+  }
+  render();
+}
+
+/* ---------- SCHEDULES ---------- */
+function renderSchedules(){
+  let html=`<button class="btn btn-primary btn-block" style="margin-bottom:14px" onclick="openScheduleModal()">＋ New schedule</button>`;
+  if(state.schedules.length===0){
+    html+=`<div class="card"><div class="empty"><div class="big">🗓️</div>
+      <p>Schedules are your fixed commitments — school periods, work shifts, practice. Add one and I'll plan around it.</p>
+      <button class="btn btn-soft" onclick="loadExample()">Try example data</button>
+    </div></div>`;
+  }
+  for(const s of state.schedules){
+    const c=colorOf(s.color);
+    html+=`<div class="card sched-group">
+      <div class="row" style="justify-content:space-between;margin-bottom:6px">
+        <h2 style="margin:0"><span class="block-dot" style="background:${c.dot}"></span>${esc(s.name)}</h2>
+        <div class="row" style="gap:2px">
+          <button class="icon-btn" title="Add block" onclick="openBlockModal('${s.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+          <button class="icon-btn" title="Delete schedule" onclick="deleteSchedule('${s.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m2 0v12a2 2 0 01-2 2H9a2 2 0 01-2-2V7"/></svg></button>
+        </div>
+      </div>`;
+    if(s.blocks.length===0) html+=`<p class="muted">No time blocks yet — tap ＋ to add one.</p>`;
+    for(const b of s.blocks){
+      html+=`<div class="block-line">
+        <span class="block-dot" style="background:${c.dot}"></span>
+        <div class="block-info">
+          <b>${esc(b.label||s.name)}</b>
+          <span class="tiny">${b.days.map(d=>DAYS[d]).join(" · ")} — ${m2t(t2m(b.start))} to ${m2t(t2m(b.end))}</span>
+        </div>
+        <button class="icon-btn" onclick="deleteBlock('${s.id}','${b.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>`;
+    }
+    html+=`</div>`;
+  }
+  main.innerHTML=html;
+}
+function deleteSchedule(id){ if(!confirm("Delete this schedule and all its blocks?"))return; state.schedules=state.schedules.filter(s=>s.id!==id); invalidatePlans(); render(); }
+function deleteBlock(sid,bid){ const s=state.schedules.find(x=>x.id===sid); if(!s)return; s.blocks=s.blocks.filter(b=>b.id!==bid); invalidatePlans(); render(); }
+function invalidatePlans(){ state.plans={}; }
+
+let modalDays=[];
+function openScheduleModal(){
+  openModal(`<h3>New schedule</h3>
+    <label class="fld"><span>Name</span><input type="text" id="schedName" placeholder="e.g. School, Work, Soccer practice"></label>
+    <label class="fld"><span>Color</span><div class="dots" id="schedDots">${COLORS.map((c,i)=>`<button style="background:${c.dot}" class="${i===0?"on":""}" onclick="pickDot(this)" data-c="${c.key}"></button>`).join("")}</div></label>
+    <button class="btn btn-primary btn-block" onclick="saveSchedule()">Create schedule</button>`);
+}
+function pickDot(el){ el.parentNode.querySelectorAll("button").forEach(b=>b.classList.remove("on")); el.classList.add("on"); }
+function saveSchedule(){
+  const name=document.getElementById("schedName").value.trim();
+  if(!name){ toast("Give the schedule a name"); return; }
+  const color=document.querySelector("#schedDots button.on").dataset.c;
+  const s={id:uid(),name,color,blocks:[]};
+  state.schedules.push(s); closeModal(); render(); openBlockModal(s.id);
+}
+function openBlockModal(sid){
+  const s=state.schedules.find(x=>x.id===sid); if(!s)return;
+  modalDays=[1,2,3,4,5];
+  openModal(`<h3>Add block to ${esc(s.name)}</h3>
+    <label class="fld"><span>Label (optional)</span><input type="text" id="blkLabel" placeholder="e.g. Classes, Morning shift"></label>
+    <label class="fld"><span>Days</span><div class="daypills" id="blkDays">${DAYS.map((d,i)=>`<button class="${modalDays.includes(i)?"on":""}" onclick="toggleDay(this,${i})">${d}</button>`).join("")}</div></label>
+    <div class="grid2">
+      <label class="fld"><span>Starts</span><input type="time" id="blkStart" value="08:30"></label>
+      <label class="fld"><span>Ends</span><input type="time" id="blkEnd" value="15:00"></label>
+    </div>
+    <button class="btn btn-primary btn-block" onclick="saveBlock('${sid}')">Add block</button>`);
+}
+function toggleDay(el,i){ el.classList.toggle("on"); if(modalDays.includes(i)) modalDays=modalDays.filter(x=>x!==i); else modalDays.push(i); }
+function saveBlock(sid){
+  const s=state.schedules.find(x=>x.id===sid); if(!s)return;
+  const start=document.getElementById("blkStart").value, end=document.getElementById("blkEnd").value;
+  if(!start||!end){ toast("Pick start and end times"); return; }
+  if(t2m(end)<=t2m(start)){ toast("End time must be after start time"); return; }
+  if(modalDays.length===0){ toast("Pick at least one day"); return; }
+  s.blocks.push({id:uid(),label:document.getElementById("blkLabel").value.trim(),days:[...modalDays].sort(),start,end});
+  invalidatePlans(); closeModal(); render(); toast("Block added ✓");
+}
+
+/* ---------- TASKS ---------- */
+let taskFilter="open";
+function renderTasks(){
+  const open=state.tasks.filter(t=>!t.completed), done=state.tasks.filter(t=>t.completed);
+  let html=`<button class="btn btn-primary btn-block" style="margin-bottom:14px" onclick="openTaskModal()">＋ New task</button>
+    <div class="seg">
+      <button class="${taskFilter==="open"?"on":""}" onclick="taskFilter='open';render()">To do (${open.length})</button>
+      <button class="${taskFilter==="done"?"on":""}" onclick="taskFilter='done';render()">Done (${done.length})</button>
+    </div>`;
+  const list=taskFilter==="open"?sortTasksForPlan(open):done;
+  if(list.length===0){
+    html+=`<div class="card"><div class="empty"><div class="big">${taskFilter==="open"?"🎈":"🏆"}</div>
+      <p>${taskFilter==="open"?"No tasks yet. Add homework, assignments, projects — anything you need time for.":"Completed tasks will show up here. You've got this!"}</p>
+    </div></div>`;
+  } else {
+    html+=`<div class="card">`;
+    for(const t of list){
+      const pct=t.est?Math.min(100,Math.round(t.doneMin/t.est*100)):0;
+      const pri=["","chip sky","chip butter","chip rose"][t.priority]||"chip sky";
+      const priLabel=["","Low","Medium","High"][t.priority]||"Low";
+      const dueChip=t.due?(t.due<todayKey()&&!t.completed?`<span class="chip rose">overdue · ${fmtDue(t.due)}</span>`:`<span class="chip lav">due ${fmtDue(t.due)}</span>`):"";
+      html+=`<div class="task-item ${t.completed?"strike":""}">
+        <div class="checkbox ${t.completed?"done":""}" onclick="toggleTask('${t.id}')"><svg viewBox="0 0 24 24"><path d="M5 13l4 4 10-10"/></svg></div>
+        <div class="task-main">
+          <div class="task-title t-title">${esc(t.title)}</div>
+          <div class="task-meta">
+            ${t.subject?`<span class="chip mint">${esc(t.subject)}</span>`:""}
+            <span class="${pri}">${priLabel}</span>
+            <span class="chip peach">${durFmt(t.est)}</span>
+            ${dueChip}
+          </div>
+          ${!t.completed&&t.doneMin>0?`<div class="mini-progress"><i style="width:${pct}%"></i></div><div class="tiny" style="margin-top:3px">${durFmt(t.doneMin)} done · ${durFmt(t.est-t.doneMin)} left</div>`:""}
+        </div>
+        <button class="icon-btn" onclick="deleteTask('${t.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m2 0v12a2 2 0 01-2 2H9a2 2 0 01-2-2V7"/></svg></button>
+      </div>`;
+    }
+    html+=`</div>`;
+  }
+  main.innerHTML=html;
+}
+function fmtDue(k){ const d=keyToDate(k); const t=keyToDate(todayKey()); const diff=Math.round((d-t)/86400000);
+  if(diff===0)return"today"; if(diff===1)return"tomorrow"; if(diff===-1)return"yesterday";
+  return d.toLocaleDateString(undefined,{month:"short",day:"numeric"}); }
+function toggleTask(id){
+  const t=state.tasks.find(x=>x.id===id); if(!t)return;
+  t.completed=!t.completed;
+  if(t.completed){ t.doneMin=t.est; toast("🎉 Nice work!"); } else { t.doneMin=0; }
+  invalidatePlans(); render();
+}
+function deleteTask(id){ if(!confirm("Delete this task?"))return; state.tasks=state.tasks.filter(t=>t.id!==id); invalidatePlans(); render(); }
+function openTaskModal(){
+  openModal(`<h3>New task</h3>
+    <label class="fld"><span>What is it?</span><input type="text" id="tkTitle" placeholder="e.g. Math worksheet ch. 7"></label>
+    <label class="fld"><span>Subject / category (optional)</span><input type="text" id="tkSubject" placeholder="e.g. Math, English, Work"></label>
+    <div class="grid2">
+      <label class="fld"><span>Due date</span><input type="date" id="tkDue" value="${todayKey()}"></label>
+      <label class="fld"><span>Priority</span><select id="tkPri"><option value="1">Low</option><option value="2" selected>Medium</option><option value="3">High</option></select></label>
+    </div>
+    <label class="fld"><span>How long will it take?</span>
+      <select id="tkEst">
+        <option value="15">15 minutes</option><option value="30">30 minutes</option>
+        <option value="45">45 minutes</option><option value="60" selected>1 hour</option>
+        <option value="90">1.5 hours</option><option value="120">2 hours</option>
+        <option value="180">3 hours</option><option value="240">4 hours</option>
+        <option value="custom">Custom…</option>
+      </select></label>
+    <label class="fld" id="customEstWrap" style="display:none"><span>Custom minutes</span><input type="number" id="tkEstCustom" min="5" step="5" value="75"></label>
+    <button class="btn btn-primary btn-block" onclick="saveTask()">Add task</button>`);
+  document.getElementById("tkEst").addEventListener("change",e=>{
+    document.getElementById("customEstWrap").style.display=e.target.value==="custom"?"block":"none";
+  });
+}
+function saveTask(){
+  const title=document.getElementById("tkTitle").value.trim();
+  if(!title){ toast("Give the task a name"); return; }
+  let est=document.getElementById("tkEst").value;
+  est=est==="custom"?parseInt(document.getElementById("tkEstCustom").value,10):parseInt(est,10);
+  if(!est||est<5){ toast("Estimate must be at least 5 minutes"); return; }
+  state.tasks.push({
+    id:uid(), title, subject:document.getElementById("tkSubject").value.trim(),
+    due:document.getElementById("tkDue").value||null,
+    est, priority:parseInt(document.getElementById("tkPri").value,10), doneMin:0, completed:false
+  });
+  invalidatePlans(); closeModal(); render(); toast("Task added ✓");
+}
+
+/* ---------- DATA / SETTINGS ---------- */
+function renderData(){
+  const st=state.settings;
+  main.innerHTML=`
+    <div class="card"><h2>⏰ Planning preferences</h2>
+      <div class="grid2">
+        <label class="fld"><span>Day starts</span><input type="time" id="setStart" value="${st.dayStart}"></label>
+        <label class="fld"><span>Day ends</span><input type="time" id="setEnd" value="${st.dayEnd}"></label>
+        <label class="fld"><span>Focus session</span>
+          <select id="setFocus">${[25,30,45,60,90].map(v=>`<option value="${v}" ${st.focusLen==v?"selected":""}>${v} min</option>`).join("")}</select></label>
+        <label class="fld"><span>Break between</span>
+          <select id="setBreak">${[5,10,15,20].map(v=>`<option value="${v}" ${st.breakLen==v?"selected":""}>${v} min</option>`).join("")}</select></label>
+      </div>
+      <label class="fld"><span>Buffer after commitments</span>
+        <select id="setBuffer">${[0,5,10,15,30].map(v=>`<option value="${v}" ${st.buffer==v?"selected":""}>${v} min</option>`).join("")}</select></label>
+      <button class="btn btn-primary btn-block" onclick="saveSettings()">Save preferences</button>
+    </div>
+    <div class="card"><h2>💾 ${storeOK?"Device save":"Temporary session save"}</h2>
+      ${storeOK
+        ?`<div class="balance-note" style="margin-bottom:12px">✅ Auto-save is on — every change is saved to this device instantly. "Save now" also keeps a checkpoint you can roll back to with "Restore save" (handy undo).</div>`
+        :`<div class="warn">⚠️ <b>Disclaimer:</b> this save is temporary — it only lasts while the app is open and <b>will not save between sessions</b>. When you close or reload the app, it's gone. For a permanent copy, use Export backup below.</div>`}
+      <div class="row">
+        <button class="btn btn-primary grow" onclick="tempSave()">Save now</button>
+        <button class="btn btn-soft grow" onclick="restoreTempSave()">Restore save</button>
+      </div>
+      <p class="tiny" style="margin-top:8px">${sessionSaveAt?"Last checkpoint: "+sessionSaveAt:"No checkpoint yet this session."}</p>
+    </div>
+    <div class="card"><h2>📦 Permanent backup</h2>
+      <div class="warn">To keep your data <b>between sessions</b>, export a backup before closing, then import it next time to pick up where you left off.</div>
+      <div class="row" style="margin-bottom:10px">
+        <button class="btn btn-mint grow" onclick="exportData()">⬇ Export backup</button>
+        <button class="btn btn-soft grow" onclick="document.getElementById('importArea').style.display='block'">⬆ Import</button>
+      </div>
+      <div id="importArea" style="display:none">
+        <p class="muted" style="margin-bottom:6px">Paste your backup below, or choose the file:</p>
+        <input type="file" id="importFile" accept=".json" style="margin-bottom:8px" onchange="importFromFile(this)">
+        <textarea id="importText" placeholder='{"settings":…}'></textarea>
+        <button class="btn btn-primary btn-block" style="margin-top:8px" onclick="importFromText()">Restore backup</button>
+      </div>
+    </div>
+    <div class="card"><h2>🌱 Fresh start</h2>
+      <div class="row">
+        <button class="btn btn-soft grow" onclick="loadExample()">Load example data</button>
+        <button class="btn btn-danger grow" onclick="resetAll()">Clear everything</button>
+      </div>
+    </div>`;
+}
+function saveSettings(){
+  const s=state.settings;
+  s.dayStart=document.getElementById("setStart").value||"07:00";
+  s.dayEnd=document.getElementById("setEnd").value||"22:30";
+  if(t2m(s.dayEnd)<=t2m(s.dayStart)){ toast("Day end must be after day start"); return; }
+  s.focusLen=+document.getElementById("setFocus").value;
+  s.breakLen=+document.getElementById("setBreak").value;
+  s.buffer=+document.getElementById("setBuffer").value;
+  invalidatePlans(); persist(); toast("Preferences saved ✓");
+}
+function exportData(){
+  const json=JSON.stringify({version:1,exported:new Date().toISOString(),settings:state.settings,schedules:state.schedules,tasks:state.tasks},null,2);
+  try{
+    const blob=new Blob([json],{type:"application/json"});
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    a.download="studyflow-backup-"+todayKey()+".json";
+    document.body.appendChild(a); a.click(); a.remove();
+    toast("Backup downloaded ✓");
+  }catch(e){}
+  const area=document.getElementById("importArea");
+  if(area){ area.style.display="block"; document.getElementById("importText").value=json; }
+  try{ if(navigator.clipboard) navigator.clipboard.writeText(json).then(()=>toast("Backup downloaded & copied ✓")).catch(()=>{}); }catch(e){}
+}
+function importFromFile(input){
+  const f=input.files&&input.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{ document.getElementById("importText").value=r.result; importFromText(); };
+  r.readAsText(f);
+}
+function importFromText(){
+  try{
+    const data=JSON.parse(document.getElementById("importText").value);
+    if(!data||typeof data!=="object"||!Array.isArray(data.tasks)||!Array.isArray(data.schedules)) throw 0;
+    state.settings=Object.assign({dayStart:"07:00",dayEnd:"22:30",focusLen:45,breakLen:10,buffer:10},data.settings||{});
+    state.schedules=data.schedules; state.tasks=data.tasks; state.plans={};
+    toast("Backup restored ✓"); go("today");
+  }catch(e){ toast("Hmm, that doesn't look like a StudyFlow backup"); }
+}
+function resetAll(){
+  if(!confirm("Clear all schedules, tasks and plans?"))return;
+  state.schedules=[];state.tasks=[];state.plans={};render();toast("All clear 🌱");
+}
+function loadExample(){
+  const tk=todayKey();
+  state.schedules=[
+    {id:uid(),name:"School",color:"sky",blocks:[{id:uid(),label:"Classes",days:[1,2,3,4,5],start:"08:30",end:"15:00"}]},
+    {id:uid(),name:"Work",color:"peach",blocks:[{id:uid(),label:"Café shift",days:[2,4],start:"17:00",end:"20:00"}]},
+  ];
+  state.tasks=[
+    {id:uid(),title:"Math worksheet ch. 7",subject:"Math",due:tk,est:60,priority:3,doneMin:0,completed:false},
+    {id:uid(),title:"English essay draft",subject:"English",due:shiftDate(tk,2),est:90,priority:2,doneMin:0,completed:false},
+    {id:uid(),title:"Study for bio quiz",subject:"Biology",due:shiftDate(tk,1),est:45,priority:3,doneMin:0,completed:false},
+    {id:uid(),title:"History reading pp. 40–60",subject:"History",due:shiftDate(tk,3),est:40,priority:1,doneMin:0,completed:false},
+  ];
+  state.plans={}; go("today"); toast("Example loaded — tap Re-plan anytime ✨");
+}
+
+/* ---------- device auto-save (falls back to session-only memory) ---------- */
+const STORE_KEY="studyflow-data-v1";
+let storeOK=false;
+try{ const _k="__sf_probe"; window.localStorage.setItem(_k,"1"); window.localStorage.removeItem(_k); storeOK=true; }catch(e){ storeOK=false; }
+let persistTimer=null;
+function persist(){
+  if(!storeOK) return;
+  clearTimeout(persistTimer);
+  persistTimer=setTimeout(()=>{
+    try{ window.localStorage.setItem(STORE_KEY, JSON.stringify({version:1,settings:state.settings,schedules:state.schedules,tasks:state.tasks,plans:state.plans})); }catch(e){}
+  },250);
+}
+function loadPersisted(){
+  if(!storeOK) return;
+  try{
+    const d=JSON.parse(window.localStorage.getItem(STORE_KEY));
+    if(d && Array.isArray(d.tasks) && Array.isArray(d.schedules)){
+      state.settings=Object.assign({dayStart:"07:00",dayEnd:"22:30",focusLen:45,breakLen:10,buffer:10},d.settings||{});
+      state.schedules=d.schedules; state.tasks=d.tasks; state.plans=d.plans||{};
+    }
+  }catch(e){}
+}
+
+/* ---------- temporary session save ---------- */
+let sessionSave=null, sessionSaveAt=null, saveBtnTimer=null;
+function nowClock(){ const d=new Date(); return m2t(d.getHours()*60+d.getMinutes()); }
+function tempSave(){
+  sessionSave=JSON.stringify({settings:state.settings,schedules:state.schedules,tasks:state.tasks,plans:state.plans,viewDate:state.viewDate});
+  sessionSaveAt=nowClock();
+  const b=document.getElementById("saveBtn");
+  b.classList.add("saved"); b.childNodes[b.childNodes.length-1].textContent=" Saved ✓";
+  clearTimeout(saveBtnTimer);
+  saveBtnTimer=setTimeout(()=>{ b.classList.remove("saved"); b.childNodes[b.childNodes.length-1].textContent=" Save"; },2200);
+  if(storeOK){ persist(); toast("Saved to this device ✓"); }
+  else toast("Saved for this session — remember, this won't survive closing the app");
+  if(state.tab==="data") render();
+}
+function restoreTempSave(){
+  if(!sessionSave){ toast("No session save yet — tap Save first"); return; }
+  try{
+    const d=JSON.parse(sessionSave);
+    state.settings=d.settings; state.schedules=d.schedules; state.tasks=d.tasks;
+    state.plans=d.plans||{}; state.viewDate=d.viewDate||todayKey();
+    toast("Restored your session save ✓"); go("today");
+  }catch(e){ toast("Couldn't restore that save"); }
+}
+function dismissDisclaimer(){ const el=document.getElementById("disclaimer"); if(el) el.style.display="none"; }
+
+/* ---------- shared UI ---------- */
+function openModal(html){ document.getElementById("modalBody").innerHTML=`<div class="handle"></div>`+html; document.getElementById("modalBack").classList.add("show"); }
+function closeModal(){ document.getElementById("modalBack").classList.remove("show"); }
+let toastTimer;
+function toast(msg){
+  const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),2200);
+}
+/* ---------- boot ---------- */
+function initDisclaimer(){
+  const el=document.getElementById("disclaimer"); if(!el) return;
+  if(storeOK){
+    el.classList.add("ok");
+    el.firstElementChild.innerHTML="✅ <b>Auto-save is on.</b> Your data saves to this device automatically. It lives in this browser/app only — export a backup in Settings now and then just in case.";
+  }
+}
+loadPersisted();
+initDisclaimer();
+render();
+if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")){
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>
