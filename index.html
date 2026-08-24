@@ -203,6 +203,20 @@
   .rule-day .w b{display:block;font-weight:700}
   .rule-day .w span{color:var(--ink-soft);font-size:11.5px}
   .optpill{display:inline-block;background:var(--mint);color:#2e7a5c;font-size:9.5px;font-weight:800;letter-spacing:.03em;border-radius:999px;padding:1px 6px;vertical-align:1px}
+  .filterbar{display:flex;flex-direction:column;gap:7px;margin-bottom:12px}
+  .fchips{display:flex;gap:6px;flex-wrap:wrap}
+  .fchip{border:1px solid var(--line);background:var(--card);color:var(--ink-soft);border-radius:999px;
+    padding:5px 11px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+  .fchip.on{background:var(--lav);color:#5b4fa0;border-color:transparent}
+  .cd-row{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line)}
+  .cd-row:last-of-type{border-bottom:none}
+  .cd-row .chip{flex:0 0 auto;min-width:66px;justify-content:center}
+  .cd-w{flex:1;min-width:0;font-size:13.5px}
+  .cd-w b{display:block;font-weight:700}
+  .cd-w .tiny{display:block;margin-top:1px}
+  .blk-mail{display:inline-flex;align-items:center;gap:4px;margin-top:3px;font-size:11.5px;font-weight:700;color:var(--sky-deep);text-decoration:none;word-break:break-all}
+  .blk-mail svg{width:12px;height:12px;flex:0 0 auto}
+  .blk-mail:active{opacity:.6}
   .tl-item.fixed.opt{border-style:dashed}
   .optrow{display:flex;gap:9px;align-items:flex-start;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:12px;cursor:pointer}
   .optrow input{margin-top:3px;width:17px;height:17px;accent-color:var(--lav-deep);flex:0 0 auto}
@@ -352,7 +366,7 @@ function fixedEventsFor(dateKey){
   for(const s of state.schedules)
     for(const b of s.blocks)
       if(b.days.includes(dow))
-        evs.push({ label:b.label||s.name, sched:s.name, color:s.color, start:t2m(b.start), end:t2m(b.end), optional:!!b.optional });
+        evs.push({ label:b.label||s.name, sched:s.name, color:s.color, start:t2m(b.start), end:t2m(b.end), optional:!!b.optional, email:b.email||"" });
   evs.sort((a,b)=>a.start-b.start);
   return evs;
 }
@@ -539,6 +553,20 @@ function renderToday(){
     html+=`<div class="balance-note">🌿 Nice balance — everything fits with <b>${durFmt(freeMin)}</b> of free time left to recharge.</div>`;
   }
 
+  const up=nextExams(dk,3);
+  if(up.length){
+    html+=`<div class="card"><h2>🎯 Coming up</h2>`;
+    for(const [when,kind,what,note,iso] of up){
+      const dd=daysBetween(dk,iso);
+      const urg=dd<=3?"rose":dd<=10?"peach":"lav";
+      html+=`<div class="cd-row">
+        <span class="chip ${urg}">${dd===0?"today":dd===1?"tomorrow":dd+" days"}</span>
+        <div class="cd-w"><b>${esc(what)}</b><span class="tiny">${esc(when)} · ${esc(note)}</span></div>
+      </div>`;
+    }
+    html+=`<button class="btn btn-soft btn-sm btn-block" style="margin-top:10px" onclick="go('rules')">See all exam dates</button></div>`;
+  }
+
   html+=`<div class="row" style="margin-bottom:12px">
     <button class="btn btn-primary grow" onclick="regeneratePlan()">↻ Re-plan this day</button>
   </div>`;
@@ -557,6 +585,7 @@ function renderToday(){
           <div style="padding-left:8px">
             <div class="t-title" style="color:${c.text}">${esc(it.label)}${it.optional?` <span class="optpill">drop-in</span>`:""}</div>
             <div class="t-sub">${esc(it.sched)} · ${durFmt(it.end-it.start)}${it.optional?" · optional":""}</div>
+            ${it.email?`<a class="blk-mail" href="mailto:${esc(it.email)}" title="Email ${esc(it.email)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>${esc(it.email)}</a>`:""}
           </div></div>`;
       } else if(it.kind==="study"){
         const done=!!state.plans[dk].doneChunks[it.id];
@@ -625,6 +654,7 @@ function renderSchedules(){
         <div class="block-info">
           <b>${esc(b.label||s.name)}${b.optional?` <span class="optpill">drop-in</span>`:""}</b>
           <span class="tiny">${b.days.map(d=>DAYS[d]).join(" · ")} — ${m2t(t2m(b.start))} to ${m2t(t2m(b.end))}${b.note?" · "+esc(b.note):""}</span>
+          ${b.email?`<a class="blk-mail" href="mailto:${esc(b.email)}" title="Email ${esc(b.email)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>${esc(b.email)}</a>`:""}
         </div>
         <button class="icon-btn" onclick="deleteBlock('${s.id}','${b.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>`;
@@ -689,7 +719,8 @@ function importScan(){
     if(!days.length) continue;
     let start=b2.start, end=b2.end;
     if(t2m(end)<=t2m(start)) end="23:59"; // overnight shifts get clipped to end of day
-    clean.push({id:uid(),label:String(b2.label||"").slice(0,40),days:[...new Set(days)].sort(),start,end,optional:!!b2.optional,note:b2.note?String(b2.note).slice(0,60):""});
+    clean.push({id:uid(),label:String(b2.label||"").slice(0,40),days:[...new Set(days)].sort(),start,end,
+                optional:!!b2.optional,note:b2.note?String(b2.note).slice(0,60):"",email:b2.email?String(b2.email).slice(0,60):""});
   }
   if(!clean.length){ toast("No usable time blocks found — double-check Claude's reply"); return; }
   state.schedules.push({id:uid(),name,color,blocks:clean});
@@ -722,6 +753,7 @@ function openBlockModal(sid){
       <label class="fld"><span>Starts</span><input type="time" id="blkStart" value="08:30"></label>
       <label class="fld"><span>Ends</span><input type="time" id="blkEnd" value="15:00"></label>
     </div>
+    <label class="fld"><span>Contact email (optional)</span><input type="email" id="blkEmail" placeholder="e.g. professor@utdallas.edu"></label>
     <label class="optrow"><input type="checkbox" id="blkOpt">
       <span><b>Drop-in / optional</b><br><span class="tiny">Shown on your day, but study time still gets planned over it — good for office hours.</span></span>
     </label>
@@ -734,8 +766,9 @@ function saveBlock(sid){
   if(!start||!end){ toast("Pick start and end times"); return; }
   if(t2m(end)<=t2m(start)){ toast("End time must be after start time"); return; }
   if(modalDays.length===0){ toast("Pick at least one day"); return; }
-  const opt=document.getElementById("blkOpt");
-  s.blocks.push({id:uid(),label:document.getElementById("blkLabel").value.trim(),days:[...modalDays].sort(),start,end,optional:!!(opt&&opt.checked)});
+  const opt=document.getElementById("blkOpt"), em=document.getElementById("blkEmail");
+  s.blocks.push({id:uid(),label:document.getElementById("blkLabel").value.trim(),days:[...modalDays].sort(),start,end,
+                 optional:!!(opt&&opt.checked),email:em?em.value.trim():""});
   invalidatePlans(); closeModal(); render(); toast("Block added ✓");
 }
 
@@ -752,21 +785,27 @@ const WEEK_RHYTHM=[
   ["SUN","PHYS 2325 Mastering homework","11:59pm"]
 ];
 const EXAM_DATES=[
-  ["Aug 24 – Sep 4","window","PHYS 1301 · Mechanics pretest","Test Center (SPN2 or ARC) — reserve 48h ahead"],
-  ["Mon Sep 21","ecs","ECS 1210 · Quiz 1","Paper-based coding fluency — 35 min, handwritten, no machine, no notes"],
-  ["Thu Sep 24","phys","PHYS 2325 · Exam 1","Chapters 1–3 — in class, closed book"],
-  ["Fri Sep 25","math","MATH 2419 · Exam I","8:30–9:45pm, SCI 1.220"],
-  ["Mon Oct 12","ecs","ECS 1210 · Quiz 2","Problem solving I: conditionals — 35 min, machine allowed"],
-  ["Thu Oct 22","phys","PHYS 2325 · Exam 2","Chapters 4–6 — in class, closed book"],
-  ["Mon Oct 26","ecs","ECS 1210 · Quiz 3","Problem solving II: loops & 1D arrays — 35 min, machine allowed"],
-  ["Fri Nov 6","math","MATH 2419 · Exam II","8:30–9:45pm, SCI 1.220"],
-  ["Mon Nov 9","ecs","ECS 1210 · Quiz 4","Language transfer MATLAB → C++ — 30 min, plus a written justification"],
-  ["Nov 11 – 21","window","PHYS 1301 · Mechanics posttest","Test Center — booking really shuts Thu 19 Nov, 11:45am"],
-  ["Thu Nov 19","phys","PHYS 2325 · Exam 3","Chapters 7, 8, 9, 13 — in class, closed book"],
-  ["Mon Nov 30","ecs","ECS 1210 · Quiz 5","Hardware integration practical — 50 min, station-based, individual"],
-  ["Dec 11 – 16","phys","PHYS 2325 · Exam 4 (final)","Chapters 9–11, 14–16 — exact date TBD"],
-  ["TBA","math","MATH 2419 · Final exam","Comprehensive — date, time and room not yet announced"]
+  ["Aug 24 – Sep 4","window","PHYS 1301 · Mechanics pretest","Test Center (SPN2 or ARC) — reserve 48h ahead","2026-09-04"],
+  ["Mon Sep 21","ecs","ECS 1210 · Quiz 1","Paper-based coding fluency — 35 min, handwritten, no machine, no notes","2026-09-21"],
+  ["Thu Sep 24","phys","PHYS 2325 · Exam 1","Chapters 1–3 — in class, closed book","2026-09-24"],
+  ["Fri Sep 25","math","MATH 2419 · Exam I","8:30–9:45pm, SCI 1.220","2026-09-25"],
+  ["Mon Oct 12","ecs","ECS 1210 · Quiz 2","Problem solving I: conditionals — 35 min, machine allowed","2026-10-12"],
+  ["Thu Oct 22","phys","PHYS 2325 · Exam 2","Chapters 4–6 — in class, closed book","2026-10-22"],
+  ["Mon Oct 26","ecs","ECS 1210 · Quiz 3","Problem solving II: loops & 1D arrays — 35 min, machine allowed","2026-10-26"],
+  ["Fri Nov 6","math","MATH 2419 · Exam II","8:30–9:45pm, SCI 1.220","2026-11-06"],
+  ["Mon Nov 9","ecs","ECS 1210 · Quiz 4","Language transfer MATLAB → C++ — 30 min, plus a written justification","2026-11-09"],
+  ["Nov 11 – 21","window","PHYS 1301 · Mechanics posttest","Test Center — booking really shuts Thu 19 Nov, 11:45am","2026-11-21"],
+  ["Thu Nov 19","phys","PHYS 2325 · Exam 3","Chapters 7, 8, 9, 13 — in class, closed book","2026-11-19"],
+  ["Mon Nov 30","ecs","ECS 1210 · Quiz 5","Hardware integration practical — 50 min, station-based, individual","2026-11-30"],
+  ["Dec 11 – 16","phys","PHYS 2325 · Exam 4 (final)","Chapters 9–11, 14–16 — exact date TBD","2026-12-11"],
+  ["TBA","math","MATH 2419 · Final exam","Comprehensive — date, time and room not yet announced",null]
 ];
+function nextExams(fromKey,n){
+  return EXAM_DATES.filter(e=>e[4]&&e[4]>=fromKey).sort((a,b)=>a[4]<b[4]?-1:1).slice(0,n||3);
+}
+function daysBetween(aKey,bKey){
+  return Math.round((keyToDate(bKey)-keyToDate(aKey))/86400000);
+}
 const LATE_RULES=[
   ["RHET 1302","<b>−20% per day</b>, no cap. Ask for an extension <b>before</b> the deadline — after it, there is no route back."],
   ["ECS 1210","<b>−10% per day</b> for 3 days, then not accepted. zyBooks deadlines are firm, but finish before the next quiz and you still get 50% of the zyLab points."],
@@ -930,7 +969,7 @@ function renderRules(){
 }
 
 /* ---------- TASKS ---------- */
-let taskFilter="open";
+let taskFilter="open", taskSubject="*", taskWindow="all";
 function renderTasks(){
   const open=state.tasks.filter(t=>!t.completed), done=state.tasks.filter(t=>t.completed);
   let html=`<button class="btn btn-primary btn-block" style="margin-bottom:14px" onclick="openTaskModal()">＋ New task</button>
@@ -938,10 +977,35 @@ function renderTasks(){
       <button class="${taskFilter==="open"?"on":""}" onclick="taskFilter='open';render()">To do (${open.length})</button>
       <button class="${taskFilter==="done"?"on":""}" onclick="taskFilter='done';render()">Done (${done.length})</button>
     </div>`;
-  const list=taskFilter==="open"?sortTasksForPlan(open):done;
+  let list=taskFilter==="open"?sortTasksForPlan(open):done;
+
+  // Course + timeframe filters — essential once a whole semester is loaded.
+  const subjects=[...new Set(state.tasks.map(t=>t.subject).filter(Boolean))].sort();
+  if(subjects.length>1 || state.tasks.length>12){
+    const winLabel={all:"All",week:"Next 7 days",fortnight:"Next 14 days"};
+    html+=`<div class="filterbar">
+      <div class="fchips">
+        <button class="fchip ${taskSubject==="*"?"on":""}" onclick="taskSubject='*';render()">All courses</button>
+        ${subjects.map(s=>`<button class="fchip ${taskSubject===s?"on":""}" onclick="taskSubject=${JSON.stringify(s).replace(/"/g,"&quot;")};render()">${esc(s)}</button>`).join("")}
+      </div>
+      <div class="fchips">
+        ${["all","week","fortnight"].map(w=>`<button class="fchip ${taskWindow===w?"on":""}" onclick="taskWindow='${w}';render()">${winLabel[w]}</button>`).join("")}
+      </div>
+    </div>`;
+  }
+  const total=list.length;
+  if(taskSubject!=="*") list=list.filter(t=>t.subject===taskSubject);
+  if(taskWindow!=="all"){
+    const days=taskWindow==="week"?7:14;
+    const cutoff=shiftDate(todayKey(),days);
+    list=list.filter(t=>t.due && t.due<=cutoff);
+  }
+  const filtered=(taskSubject!=="*"||taskWindow!=="all");
+  if(filtered) html+=`<p class="muted" style="margin:-4px 0 10px">Showing <b>${list.length}</b> of ${total}. <a href="#" onclick="taskSubject='*';taskWindow='all';render();return false">Clear filters</a></p>`;
+
   if(list.length===0){
-    html+=`<div class="card"><div class="empty"><div class="big">${taskFilter==="open"?"🎈":"🏆"}</div>
-      <p>${taskFilter==="open"?"No tasks yet. Add homework, assignments, projects — anything you need time for.":"Completed tasks will show up here. You've got this!"}</p>
+    html+=`<div class="card"><div class="empty"><div class="big">${filtered?"🔍":taskFilter==="open"?"🎈":"🏆"}</div>
+      <p>${filtered?"Nothing matches that filter — try widening it.":taskFilter==="open"?"No tasks yet. Add homework, assignments, projects — anything you need time for.":"Completed tasks will show up here. You've got this!"}</p>
     </div></div>`;
   } else {
     html+=`<div class="card">`;
@@ -1054,6 +1118,10 @@ function renderData(){
         <textarea id="importText" placeholder='{"settings":…}'></textarea>
         <button class="btn btn-primary btn-block" style="margin-top:8px" onclick="importFromText()">Restore backup</button>
       </div>
+    </div>
+    <div class="card"><h2>📲 Your phone</h2>
+      <p class="muted" style="margin-bottom:10px">Each device keeps its own copy of your data. Make a link to carry everything across to your phone in one go.</p>
+      <button class="btn btn-primary btn-block" onclick="openShareModal()">Make a link for my phone</button>
     </div>
     <div class="card"><h2>🌱 Fresh start</h2>
       <div class="row">
@@ -1168,6 +1236,91 @@ function restoreTempSave(){
 }
 function dismissDisclaimer(){ const el=document.getElementById("disclaimer"); if(el) el.style.display="none"; }
 
+/* ---------- send to another device (link carries the data in the URL) ---------- */
+function bytesToB64url(bytes){
+  let s=""; const CH=0x8000;
+  for(let i=0;i<bytes.length;i+=CH) s+=String.fromCharCode.apply(null,bytes.subarray(i,i+CH));
+  return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+function b64urlToBytes(str){
+  const s=str.replace(/-/g,"+").replace(/_/g,"/");
+  const bin=atob(s+"===".slice((s.length+3)%4));
+  const out=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) out[i]=bin.charCodeAt(i);
+  return out;
+}
+function currentPayload(){
+  return JSON.stringify({v:1,settings:state.settings,schedules:state.schedules,tasks:state.tasks});
+}
+async function buildShareLink(){
+  const json=currentPayload();
+  const base=location.origin+location.pathname;
+  if(typeof CompressionStream==="function"){
+    try{
+      const cs=new CompressionStream("gzip");
+      const w=cs.writable.getWriter();
+      w.write(new TextEncoder().encode(json)); w.close();
+      const buf=await new Response(cs.readable).arrayBuffer();
+      return base+"#d="+bytesToB64url(new Uint8Array(buf));
+    }catch(e){}
+  }
+  return base+"#j="+bytesToB64url(new TextEncoder().encode(json));
+}
+async function decodeShareHash(hash){
+  if(hash.startsWith("#d=")){
+    const bytes=b64urlToBytes(hash.slice(3));
+    const ds=new DecompressionStream("gzip");
+    const w=ds.writable.getWriter();
+    w.write(bytes); w.close();
+    return new TextDecoder().decode(await new Response(ds.readable).arrayBuffer());
+  }
+  if(hash.startsWith("#j=")) return new TextDecoder().decode(b64urlToBytes(hash.slice(3)));
+  return null;
+}
+async function consumeShareLink(){
+  const h=location.hash;
+  if(!h || !(h.startsWith("#d=")||h.startsWith("#j="))) return;
+  history.replaceState(null,"",location.pathname);   // don't re-trigger on refresh
+  let data;
+  try{ data=JSON.parse(await decodeShareHash(h)); }
+  catch(e){ toast("That link's data was damaged in transit"); return; }
+  if(!data || !Array.isArray(data.schedules) || !Array.isArray(data.tasks)){ toast("That link didn't contain StudyFlow data"); return; }
+  window.__incoming=data;
+  const blocks=data.schedules.reduce((n,s)=>n+(s.blocks?s.blocks.length:0),0);
+  const mine=state.schedules.length||state.tasks.length;
+  openModal(`<h3>📲 Data from your other device</h3>
+    <p class="muted" style="margin-bottom:12px">This link carries <b>${data.schedules.length} schedule${data.schedules.length===1?"":"s"}</b> (${blocks} block${blocks===1?"":"s"}) and <b>${data.tasks.length} task${data.tasks.length===1?"":"s"}</b>.</p>
+    ${mine?`<div class="warnbox" style="margin-bottom:12px">This replaces what's already on this device (${state.schedules.length} schedule${state.schedules.length===1?"":"s"}, ${state.tasks.length} task${state.tasks.length===1?"":"s"}). Export a backup first if you're unsure.</div>`:""}
+    <button class="btn btn-primary btn-block" onclick="acceptIncoming()">Load it onto this device</button>
+    <button class="btn btn-soft btn-block" style="margin-top:8px" onclick="closeModal()">Not now</button>`);
+}
+function acceptIncoming(){
+  const d=window.__incoming; if(!d) return;
+  state.settings=Object.assign({dayStart:"07:00",dayEnd:"22:30",focusLen:45,breakLen:10,buffer:10},d.settings||{});
+  state.schedules=d.schedules; state.tasks=d.tasks; state.plans={};
+  window.__incoming=null; closeModal(); go("today"); toast("Loaded onto this device ✓");
+}
+async function openShareModal(){
+  openModal(`<h3>📲 Use StudyFlow on your phone</h3><p class="muted">Building your link…</p>`);
+  let url;
+  try{ url=await buildShareLink(); }
+  catch(e){ openModal(`<h3>📲 Use StudyFlow on your phone</h3><p class="muted">Couldn't build the link. Use Export backup instead.</p>`); return; }
+  const kb=(url.length/1024).toFixed(1);
+  openModal(`<h3>📲 Use StudyFlow on your phone</h3>
+    <p class="muted" style="margin-bottom:10px">This link opens StudyFlow <b>and</b> carries your schedules, tasks and settings across. Send it to yourself, then open it on your phone.</p>
+    <textarea id="shareUrl" readonly style="min-height:96px;font-size:11px;word-break:break-all">${esc(url)}</textarea>
+    <p class="tiny" style="margin:6px 0 10px">${kb} KB · one-time transfer, the two devices don't stay in sync afterwards.</p>
+    <button class="btn btn-primary btn-block" onclick="copyShareUrl()">📋 Copy link</button>
+    <p class="tiny" style="margin-top:12px"><b>On iPhone:</b> open the link in Safari, then Share → <b>Add to Home Screen</b> so it installs like an app.</p>`);
+}
+function copyShareUrl(){
+  const ta=document.getElementById("shareUrl");
+  ta.focus(); ta.select(); ta.setSelectionRange(0,999999);
+  let ok=false; try{ ok=document.execCommand("copy"); }catch(e){}
+  if(navigator.clipboard) navigator.clipboard.writeText(ta.value).then(()=>toast("Link copied 📋")).catch(()=>toast(ok?"Link copied 📋":"Select the text and copy it manually"));
+  else toast(ok?"Link copied 📋":"Select the text and copy it manually");
+}
+
 /* ---------- shared UI ---------- */
 function openModal(html){ document.getElementById("modalBody").innerHTML=`<div class="handle"></div><button class="modal-close" onclick="closeModal()" aria-label="Close">✕</button>`+html; document.getElementById("modalBack").classList.add("show"); }
 function closeModal(){ document.getElementById("modalBack").classList.remove("show"); }
@@ -1187,6 +1340,7 @@ function initDisclaimer(){
 loadPersisted();
 initDisclaimer();
 render();
+consumeShareLink();
 if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")){
   navigator.serviceWorker.register("sw.js").catch(()=>{});
 }
