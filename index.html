@@ -528,7 +528,13 @@ function renderToday(){
   }
 
   if(plan.unfit && plan.unfit.length){
-    html+=`<div class="overflow-note"><b>Heads up:</b> not everything fits ${isToday?"today":"this day"}. Still unplaced: ${plan.unfit.map(u=>esc(u.title)+" ("+durFmt(u.left)+")").join(", ")}. Consider spreading these across other days or trimming estimates.</div>`;
+    // With a whole semester loaded this list can run to dozens — show the most
+    // urgent few (the plan queue is already due-date ordered) and count the rest.
+    const SHOW=5;
+    const head=plan.unfit.slice(0,SHOW).map(u=>esc(u.title)+" ("+durFmt(u.left)+")").join(", ");
+    const rest=plan.unfit.length-SHOW;
+    const restMin=plan.unfit.slice(SHOW).reduce((s,u)=>s+u.left,0);
+    html+=`<div class="overflow-note"><b>Heads up:</b> not everything fits ${isToday?"today":"this day"}. Next up: ${head}${rest>0?` — plus <b>${rest} more</b> further out (${durFmt(restMin)} in total)`:""}. That's normal with a full semester loaded; these roll into later days.</div>`;
   } else if(plannedMin>0 && freeMin>=60){
     html+=`<div class="balance-note">🌿 Nice balance — everything fits with <b>${durFmt(freeMin)}</b> of free time left to recharge.</div>`;
   }
