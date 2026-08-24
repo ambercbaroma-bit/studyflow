@@ -59,12 +59,19 @@
   }
   nav .inner{display:flex;width:100%;max-width:560px}
   nav button{
-    flex:1;background:none;border:none;padding:10px 4px 12px;cursor:pointer;
-    display:flex;flex-direction:column;align-items:center;gap:3px;
-    color:var(--ink-faint);font-size:11px;font-weight:600;font-family:inherit;
+    flex:1;background:none;border:none;padding:10px 2px 12px;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:3px;position:relative;
+    color:var(--ink-faint);font-size:10.5px;font-weight:600;font-family:inherit;
   }
   nav button.active{color:var(--lav-deep)}
-  nav button svg{width:22px;height:22px}
+  nav button svg{width:21px;height:21px}
+  /* unread-news count on the nav icon */
+  nav button .nbadge{
+    position:absolute;top:5px;left:50%;margin-left:4px;
+    background:var(--rose-deep);color:#fff;font-size:9px;font-weight:800;
+    min-width:15px;height:15px;border-radius:99px;padding:0 4px;
+    display:flex;align-items:center;justify-content:center;line-height:1;
+  }
 
   .card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;margin-bottom:14px;border:1px solid var(--line)}
   .card h2{font-size:15px;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:8px}
@@ -262,6 +269,44 @@
   .seg button{flex:1;border:none;background:transparent;border-radius:10px;padding:8px 6px;font-size:13px;font-weight:700;color:#5b4fa0;cursor:pointer;font-family:inherit}
   .seg button.on{background:#fff;box-shadow:0 1px 4px rgba(100,90,140,.15)}
 
+  /* ---- news & updates tab ---- */
+  .daygroup{margin-bottom:16px}
+  .dayhead{
+    display:flex;align-items:center;gap:9px;margin:0 2px 8px;
+    font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);
+  }
+  .dayhead:after{content:"";flex:1;height:1px;background:var(--line)}
+  .news{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+    box-shadow:var(--shadow);padding:13px 14px;margin-bottom:9px;position:relative;
+  }
+  .news.unseen{border-left:4px solid var(--lav-deep);padding-left:11px}
+  .news .ntop{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:7px}
+  .news .ntitle{font-size:14.5px;font-weight:800;line-height:1.3}
+  .news .nsum{font-size:13px;color:var(--ink-soft);margin-top:4px;line-height:1.45}
+  .news .nwhen{
+    display:inline-flex;align-items:center;gap:5px;margin-top:8px;
+    background:var(--bg);border:1px solid var(--line);border-radius:10px;
+    padding:6px 10px;font-size:12px;font-weight:700;
+  }
+  .news .nwhen svg{width:13px;height:13px;flex:0 0 auto;stroke:var(--ink-soft)}
+  .news .nfoot{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;
+    margin-top:10px;padding-top:9px;border-top:1px solid var(--line);
+  }
+  .news .nfrom{font-size:11px;color:var(--ink-faint);flex:1;min-width:0;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .news .nacts{display:flex;gap:6px;flex:0 0 auto}
+  .newdot{width:7px;height:7px;border-radius:50%;background:var(--lav-deep);flex:0 0 auto}
+  .newsbar{
+    display:flex;align-items:center;gap:9px;background:var(--lav);color:#5b4fa0;
+    border-radius:14px;padding:11px 14px;margin-bottom:12px;font-size:13px;font-weight:700;
+    width:100%;border:none;font-family:inherit;cursor:pointer;text-align:left;
+  }
+  .newsbar .big{font-size:18px;line-height:1}
+  .newsbar .go{margin-left:auto;font-size:16px;opacity:.6}
+  .stamp{text-align:center;font-size:11px;color:var(--ink-faint);margin:2px 0 14px}
+
   .toast{
     position:fixed;left:50%;transform:translateX(-50%);bottom:86px;z-index:99;
     background:var(--ink);color:#fff;padding:10px 18px;border-radius:99px;font-size:13px;font-weight:600;
@@ -314,6 +359,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>
       Tasks
     </button>
+    <button data-tab="news" onclick="go('news')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v14H6a2 2 0 0 1-2-2z"/><path d="M17 8h1a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2"/><path d="M8 7h6M8 11h6M8 15h4"/></svg>
+      News
+    </button>
     <button data-tab="rules" onclick="go('rules')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H19v18H6.5A2.5 2.5 0 0 0 4 22z"/><path d="M9 7h7M9 11h7"/></svg>
       Rules
@@ -346,6 +395,8 @@ let state = {
   schedules: [],   // {id,name,color,blocks:[{id,label,days:[],start,end}]}
   tasks: [],       // {id,title,subject,due,est,priority,doneMin,completed}
   plans: {},       // dateKey -> {items:[...], doneChunks:{chunkId:true}}
+  news: [],        // {id,date,title,summary,cat,course,from,whenKey,whenText,read} — see NEWS section
+  newsAt: null,    // ISO stamp of the last delivery from the mail routine
   viewDate: todayKey(),
   tab: "today",
 };
@@ -463,14 +514,24 @@ const main=document.getElementById("main");
 function go(tab){ state.tab=tab; render(); window.scrollTo(0,0); }
 function render(){
   document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active",b.dataset.tab===state.tab));
-  const subs={today:"Your balanced day, planned for you",schedules:"Your fixed commitments",tasks:"Everything on your plate",rules:"The rules of each class, simplified",data:"Settings & saving your data"};
+  const subs={today:"Your balanced day, planned for you",schedules:"Your fixed commitments",tasks:"Everything on your plate",news:"What's landed in your UTD inbox",rules:"The rules of each class, simplified",data:"Settings & saving your data"};
   document.getElementById("headerSub").textContent=subs[state.tab];
+  renderNewsBadge();
   if(state.tab==="today") renderToday();
   else if(state.tab==="schedules") renderSchedules();
   else if(state.tab==="tasks") renderTasks();
+  else if(state.tab==="news") renderNews();
   else if(state.tab==="rules") renderRules();
   else renderData();
   persist();
+}
+function renderNewsBadge(){
+  const btn=document.querySelector('nav button[data-tab="news"]'); if(!btn) return;
+  const old=btn.querySelector(".nbadge"); if(old) old.remove();
+  const n=unseenNews().length; if(!n) return;
+  const b=document.createElement("span");
+  b.className="nbadge"; b.textContent=n>9?"9+":String(n);
+  btn.appendChild(b);
 }
 
 /* ---------- TODAY ---------- */
@@ -527,6 +588,25 @@ function renderToday(){
       <div class="stat"><b style="color:var(--lav-deep)">${durFmt(plannedMin)||"0m"}</b><span>Study planned</span></div>
       <div class="stat"><b style="color:var(--mint-deep)">${durFmt(freeMin)||"0m"}</b><span>Free time</span></div>
     </div>`;
+
+  // anything the mail routine found that lands on the day being viewed
+  const newsToday=state.news.filter(n=>n.whenKey===dk);
+  const newsUnseen=isToday?unseenNews().length:0;
+  if(newsToday.length){
+    html+=`<div class="card"><h2>📬 From your inbox, today</h2>
+      ${newsToday.map(n=>`<div class="cd-row">
+        <span class="chip ${catOf(n.cat).chip}">${catOf(n.cat).icon}</span>
+        <div class="cd-w"><b>${esc(n.title)}</b>${n.whenText?`<span class="tiny">${esc(n.whenText)}</span>`:""}</div>
+      </div>`).join("")}
+    </div>`;
+  }
+  if(newsUnseen){
+    html+=`<button class="newsbar" onclick="go('news')">
+      <span class="big">📬</span>
+      <span>${newsUnseen} new update${newsUnseen===1?"":"s"} from your UTD email</span>
+      <span class="go">›</span>
+    </button>`;
+  }
 
   if(plannedMin>0){
     html+=`<div class="card">
@@ -821,12 +901,12 @@ const COURSE_RULES=[
         "Put <b>“ECS 1210”</b> in the subject line. Grade disputes in writing within <b>two weeks</b>."],
    grade:[["Quizzes (5)","30%"],["Design project — final package","15%"],["Design project — Phase 5","15%"],["In-class computational (2 dropped)","10%"],["In-class design (2 dropped)","10%"],["Computational homework (8)","10%"],["Design deliverables, Phases 0–4","10%"]],
    scale:"A+ 97 · A 92 · A− 90 · B+ 87 · B 82 · B− 80 · C+ 77 · C 72 · C− 70 · D+ 67 · D 62 · D− 60 · F below 60",
-   exams:[["Mon Sep 21","Quiz 1 — paper-based coding fluency (35 min, handwritten, no machine or notes)"],
-          ["Mon Oct 12","Quiz 2 — problem solving I: conditionals (35 min, machine allowed)"],
-          ["Mon Oct 26","Quiz 3 — problem solving II: loops & 1D arrays (35 min, machine allowed)"],
-          ["Mon Nov 9","Quiz 4 — language transfer MATLAB → C++ (30 min + written tool justification)"],
-          ["Mon Nov 30","Quiz 5 — hardware integration practical (50 min, station-based, individually assessed)"]],
-   examnote:"All five are in class on a computational day, and together they're 30% of your grade. Make-ups need documented cause and prior notice.",
+   exams:[["Mon Sep 21","Quiz 1 — paper-based coding fluency · <b>5%</b> · 35 min, handwritten, no machine or notes"],
+          ["Mon Oct 12","Quiz 2 — problem solving I: conditionals · <b>5%</b> · 35 min, machine allowed"],
+          ["Mon Oct 26","Quiz 3 — problem solving II: loops & 1D arrays · <b>10%</b> · 35 min, machine allowed"],
+          ["Mon Nov 9","Quiz 4 — language transfer MATLAB → C++ · <b>5%</b> · 30 min + written tool justification"],
+          ["Mon Nov 30","Quiz 5 — hardware integration practical · <b>5%</b> · 50 min, station-based, individually assessed"]],
+   examnote:"They are <b>not weighted equally</b> — Quiz 3 (loops and arrays) is worth 10%, double any other, and the five together are 30% of your grade. All are in class on a computational day; make-ups need documented cause and prior notice.",
    rules:["<b>First class each week is computational</b> — MATLAB to week 10, C++ from 11, Arduino from 13. <b>Second class is design</b> — the coffee-grinder teardown, in a fixed team of five from Week 3.",
           "<b>Document everything before you remove it.</b> Teams must reassemble the grinder non-destructively by Week 16.",
           "<b>A missed in-class activity scores zero</b> — but two computational and two design activities are dropped, so occasional absences are absorbed.",
@@ -847,6 +927,8 @@ const COURSE_RULES=[
           "In-class activities can't be made up; two are dropped.",
           "<b>Thursday sections miss Session 15</b> (reading day) — that week you must attend another section.",
           "Engagement = 5 campus activities, one from each category A–D plus a free choice, with a selfie as proof. A photo with a faculty member earns extra credit.",
+          "<b>Each engagement category has its own window</b>, so they can't all be left to the end: <b>A</b> welcome event weeks 3–5 · <b>B</b> career fair weeks 4–5 · <b>C</b> student org weeks 3–7 · <b>D</b> community/discipline weeks 7–12 · <b>E</b> free choice by week 15.",
+          "Categories overlap with Connections on purpose — CN-2 can be a student org meeting (C), CN-3 a faculty office-hours visit (D). One visit satisfies both; note the overlap in your log.",
           "AI is fine for brainstorming, checking understanding, or feedback on a draft — note it at the end. Not for generating reflections, logs, or in-class items."],
    warn:"Faking an event attendance or a proof-of-attendance selfie is a conduct violation, not just an AI-policy one."},
   {code:"MATH 2419",color:"mint",name:"Calculus II",when:"Lecture Tue/Thu 10:00–11:15am · SCI 2.230",
@@ -861,9 +943,9 @@ const COURSE_RULES=[
           ["Every Fri","Quiz in the 8:00am problem session — 11 in total, lowest dropped"]],
    examnote:"Both midterms are Friday <b>evening</b> sittings, not in your normal class slot. The weekly quizzes come straight from the homework that's never collected.",
    rules:["Three enrolments, one course: <b>.002</b> is the lecture, <b>.301</b> is the mandatory Friday problem session where quizzes happen, <b>.701</b> is the exam section that never meets.",
-          "<b>No calculators, phones, computers or tablets</b> on any quiz or exam.",
+          "<b>No calculators, phones, computers or tablets</b> on any quiz or exam — and separately, <b>no electronic communications device during class at all</b>.",
           "Homework is posted every Tuesday and is <i>not</i> submitted — but the quizzes are built directly from it.",
-          "Participation needs you at <i>all</i> problem sessions, present for 75% of each.",
+          "<b>Full</b> participation credit needs you at <i>all</i> problem sessions, present for 75% of each.",
           "<b>Show every step.</b> Missing work can mean reduced or zero credit even with the right answer."],
    warn:""},
   {code:"PHYS 2325.001",color:"peach",name:"Mechanics",when:"Tue/Thu 11:30am–12:45pm · SCI 1.210",
@@ -871,7 +953,7 @@ const COURSE_RULES=[
         "<b>Co-instructor</b> — Dr. Waqas Shabir",
         "<b>TA</b> — Matthew Lochridge (matthew.lochridge@utdallas.edu)",
         "Slides go to Box before Tuesday's lecture; finalised versions to eLearning by Thursday midnight."],
-   grade:[["Four exams — best 3 of 4, 26 pts each","78 pts"],["Mastering Physics homework","17 pts"],["In-class quizzes & attendance","5 pts"],["“Puzzles for Gold” (extra)","+5–10"],["Pretest + posttest (extra)","+2"]],
+   grade:[["Four exams — best 3 of 4, 26 pts each","78 pts"],["Mastering Physics homework","17 pts"],["In-class quizzes & attendance (~5 quizzes)","5 pts"],["“Puzzles for Gold” — ~10 in-class tasks (extra)","+5–10"],["Pretest + posttest (extra)","+2"]],
    scale:"A+ above 97 · A 93 · A− 90 · B+ 87 · B 83 · B− 80 · C+ 77 · C 73 · C− 70 · D+ 67 · D 63 · D− 60 · F below 60",
    exams:[["Thu Sep 24","Exam 1 — Chapters 1–3"],
           ["Thu Oct 22","Exam 2 — Chapters 4–6"],
@@ -883,7 +965,8 @@ const COURSE_RULES=[
           "<b>There are no make-up exams.</b> Best-3-of-4 is the entire safety net.",
           "Formula sheet arrives a couple of days beforehand. Photo ID on the desk.",
           "Calculators required, but <b>no graphing, programmable, or text-function models</b> — a $10–20 scientific calculator with trig is right.",
-          "Questions about an exam grade must be raised within two weeks; after that grades are final."],
+          "Questions about an exam grade must be raised within two weeks; after that grades are final.",
+          "The 5 quiz/attendance points and the 5–10 “Gold” points are awarded <b>at the instructor's discretion</b> — there's no published rubric, so turning up is the only reliable way to earn them."],
    warn:""},
   {code:"RHET 1302.026",color:"rose",name:"College Writing II",when:"Tue & Thu 8:30–9:45am · CB 1.102",
    who:["<b>Yushuang Wei</b> — yushuang.wei@utdallas.edu<br>JO 3.704 · Visiting hours Thursdays 1–3pm",
@@ -1083,6 +1166,257 @@ function saveTask(){
   invalidatePlans(); closeModal(); render(); toast("Task added ✓");
 }
 
+/* ============================== NEWS & UPDATES ==============================
+   Items are written by the daily mail routine, which reads her UTD Outlook inbox
+   and delivers a digest as a "#n=" link. They live under their OWN localStorage
+   key, deliberately: the routine may open a second StudyFlow window while one is
+   already sitting open, and a separate key means the two can't overwrite each
+   other's data. Every write re-reads what's on disk and merges by message id. */
+const NEWS_CATS=[
+  {key:"deadline", label:"Deadline",      chip:"rose",   icon:"⏳"},
+  {key:"event",    label:"Event",         chip:"sky",    icon:"📅"},
+  {key:"action",   label:"Action needed", chip:"peach",  icon:"✋"},
+  {key:"announce", label:"Announcement",  chip:"lav",    icon:"📣"},
+  {key:"admin",    label:"Admin",         chip:"butter", icon:"🗂"},
+];
+const COURSE_CHIP={"ECS 1210":"lav","ECS 1100":"lav","MATH 2419":"mint","PHYS 2325":"peach",
+                   "PHYS 2125":"peach","PHYS 1301":"peach","RHET 1302":"rose"};
+const OUTLOOK_URL="https://outlook.office.com/mail/0/";
+const NEWS_KEY="studyflow-news-v1";
+const NEWS_MAX=300, NEWS_KEEP_DAYS=90;
+
+function catOf(k){ return NEWS_CATS.find(c=>c.key===k) || NEWS_CATS[3]; }
+function courseChip(c){
+  if(!c) return "sky";
+  const hit=Object.keys(COURSE_CHIP).find(k=>c.toUpperCase().indexOf(k)===0);
+  return hit?COURSE_CHIP[hit]:"sky";
+}
+function unseenNews(){ return state.news.filter(n=>!n.read); }
+function newsSorted(){
+  return state.news.slice().sort((a,b)=>(b.date||"").localeCompare(a.date||"") || (b.time||"").localeCompare(a.time||""));
+}
+function upcomingNews(){
+  const tk=todayKey();
+  return state.news.filter(n=>n.whenKey && n.whenKey>=tk).sort((a,b)=>a.whenKey.localeCompare(b.whenKey));
+}
+function dayLabel(k){
+  const tk=todayKey();
+  if(k===tk) return "Today";
+  if(k===shiftDate(tk,-1)) return "Yesterday";
+  const d=keyToDate(k);
+  return d.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
+}
+
+function renderNews(){
+  const list=newsSorted();
+  const unseen=unseenNews().length;
+  const up=upcomingNews();
+  const f=state.newsFilter||"all";
+
+  if(list.length===0){
+    main.innerHTML=`<div class="card"><div class="empty">
+      <div class="big">📬</div>
+      <p><b>Nothing here yet.</b><br>Each morning your UTD inbox is read for you, and anything worth
+      knowing — deadlines, events, class announcements — lands on this page.</p>
+      <a class="btn btn-soft" href="${OUTLOOK_URL}" target="_blank" rel="noopener">Open Outlook</a>
+    </div></div>
+    <div class="card"><h2>ℹ️ How this page fills up</h2>
+      <p class="muted">A routine on your laptop checks <b>Dal325077@utdallas.edu</b> once a day,
+      picks out the messages that actually matter, and writes them here in plain English.
+      It only ever <b>reads</b> your mail — nothing is opened, marked read, replied to or deleted.</p>
+    </div>`;
+    return;
+  }
+
+  // filter
+  let shown=list;
+  if(f==="new") shown=list.filter(n=>!n.read);
+  else if(f!=="all") shown=list.filter(n=>n.cat===f);
+
+  let html=`
+    <div class="stats">
+      <div class="stat"><b style="color:var(--lav-deep)">${unseen}</b><span>New</span></div>
+      <div class="stat"><b style="color:var(--sky-deep)">${up.length}</b><span>Coming up</span></div>
+      <div class="stat"><b style="color:var(--mint-deep)">${list.length}</b><span>Total</span></div>
+    </div>`;
+
+  if(state.newsAt){
+    const d=new Date(state.newsAt);
+    if(!isNaN(d)) html+=`<div class="stamp">Inbox last checked ${d.toLocaleDateString(undefined,{month:"short",day:"numeric"})} at ${m2t(d.getHours()*60+d.getMinutes())}</div>`;
+  }
+
+  // dated things worth seeing at a glance, same shape as the exam countdown on Today
+  if(up.length){
+    html+=`<div class="card"><h2>📌 Dates from your inbox</h2>`;
+    up.slice(0,5).forEach(n=>{
+      const away=daysBetween(todayKey(),n.whenKey);
+      const chip=away<=1?"rose":away<=7?"peach":"mint";
+      html+=`<div class="exam-row tight">
+        <div class="ed">${esc(keyToDate(n.whenKey).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}))}</div>
+        <div class="ew"><b>${esc(n.title)}</b>
+          ${n.whenText?`<span>${esc(n.whenText)}</span>`:""}</div>
+        <span class="chip ${chip}">${away===0?"today":away===1?"tomorrow":away+" days"}</span>
+      </div>`;
+    });
+    if(up.length>5) html+=`<p class="tiny" style="margin-top:8px">+ ${up.length-5} more further out</p>`;
+    html+=`</div>`;
+  }
+
+  // filters
+  const counts={};
+  NEWS_CATS.forEach(c=>counts[c.key]=list.filter(n=>n.cat===c.key).length);
+  html+=`<div class="filterbar"><div class="fchips">
+    <button class="fchip ${f==="all"?"on":""}" onclick="setNewsFilter('all')">All ${list.length}</button>
+    ${unseen?`<button class="fchip ${f==="new"?"on":""}" onclick="setNewsFilter('new')">New ${unseen}</button>`:""}
+    ${NEWS_CATS.filter(c=>counts[c.key]).map(c=>
+      `<button class="fchip ${f===c.key?"on":""}" onclick="setNewsFilter('${c.key}')">${c.icon} ${c.label} ${counts[c.key]}</button>`).join("")}
+  </div></div>`;
+
+  if(unseen) html+=`<button class="btn btn-soft btn-block btn-sm" style="margin-bottom:12px" onclick="markAllNewsRead()">Mark all ${unseen} as read</button>`;
+
+  if(shown.length===0){
+    html+=`<div class="card"><div class="empty"><div class="big">🍃</div><p>Nothing in this filter.</p></div></div>`;
+  }
+
+  // grouped by the day the message arrived
+  let lastDay=null;
+  shown.forEach(n=>{
+    if(n.date!==lastDay){
+      if(lastDay!==null) html+=`</div>`;
+      html+=`<div class="daygroup"><div class="dayhead">${esc(dayLabel(n.date))}</div>`;
+      lastDay=n.date;
+    }
+    html+=newsCard(n);
+  });
+  if(lastDay!==null) html+=`</div>`;
+
+  html+=`<a class="btn btn-ghost btn-block btn-sm" style="margin-bottom:10px" href="${OUTLOOK_URL}" target="_blank" rel="noopener">Open Outlook to read the originals</a>`;
+  main.innerHTML=html;
+}
+
+function newsCard(n){
+  const c=catOf(n.cat);
+  const away=n.whenKey?daysBetween(todayKey(),n.whenKey):null;
+  return `<div class="news ${n.read?"":"unseen"}">
+    <div class="ntop">
+      ${n.read?"":`<span class="newdot"></span>`}
+      <span class="chip ${c.chip}">${c.icon} ${c.label}</span>
+      ${n.course?`<span class="chip ${courseChip(n.course)}">${esc(n.course)}</span>`:""}
+    </div>
+    <div class="ntitle">${esc(n.title)}</div>
+    ${n.summary?`<div class="nsum">${esc(n.summary)}</div>`:""}
+    ${n.whenText||n.whenKey?`<div class="nwhen">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
+      ${esc(n.whenText || keyToDate(n.whenKey).toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"}))}
+      ${away!==null&&away>=0&&away<=7?`<span class="tiny" style="font-weight:700">· ${away===0?"today":away===1?"tomorrow":"in "+away+" days"}</span>`:""}
+    </div>`:""}
+    <div class="nfoot">
+      <span class="nfrom">${esc(n.from||"UTD email")}${n.time?" · "+esc(n.time):""}</span>
+      <span class="nacts">
+        ${n.whenKey&&!n.taskAdded?`<button class="btn btn-soft btn-sm" onclick="newsToTask('${n.id}')">+ Task</button>`:""}
+        ${n.taskAdded?`<span class="chip mint">✓ On your list</span>`:""}
+        ${n.read
+          ?`<button class="icon-btn" title="Remove" onclick="deleteNews('${n.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>`
+          :`<button class="btn btn-ghost btn-sm" onclick="markNewsRead('${n.id}')">Got it</button>`}
+      </span>
+    </div>
+  </div>`;
+}
+
+function setNewsFilter(f){ state.newsFilter=f; render(); }
+function markNewsRead(id){
+  const n=state.news.find(x=>x.id===id); if(!n) return;
+  n.read=true; saveNews(); render();
+}
+function markAllNewsRead(){ state.news.forEach(n=>n.read=true); saveNews(); render(); toast("All caught up ✓"); }
+function clearNews(){
+  if(!state.news.length){ toast("Nothing to clear"); return; }
+  if(!confirm("Remove all "+state.news.length+" updates? Tomorrow's check will start fresh."))return;
+  state.news=[]; state.newsAt=null; saveNews(); render(); toast("News cleared 🌱");
+}
+function deleteNews(id){
+  state.news=state.news.filter(n=>n.id!==id); saveNews(); render(); toast("Removed");
+}
+function newsToTask(id){
+  const n=state.news.find(x=>x.id===id); if(!n) return;
+  state.tasks.push({id:uid(), title:n.title, subject:n.course||"UTD",
+    due:n.whenKey, est:60, priority:n.cat==="deadline"?3:2, doneMin:0, completed:false});
+  n.taskAdded=true; n.read=true;
+  saveNews(); invalidatePlans(); render();
+  toast("Added to your tasks ✓");
+}
+
+/* ---------- news storage (own key, merge-on-write) ---------- */
+function readNewsStore(){
+  if(!storeOK) return {items:[],at:null};
+  try{
+    const d=JSON.parse(window.localStorage.getItem(NEWS_KEY));
+    if(d && Array.isArray(d.items)) return {items:d.items, at:d.at||null};
+  }catch(e){}
+  return {items:[],at:null};
+}
+function saveNews(){
+  state.news=pruneNews(state.news);
+  if(!storeOK) return;
+  try{ window.localStorage.setItem(NEWS_KEY, JSON.stringify({v:1, at:state.newsAt, items:state.news})); }catch(e){}
+}
+function loadNews(){
+  const d=readNewsStore();
+  state.news=pruneNews(d.items); state.newsAt=d.at;
+}
+function pruneNews(items){
+  const cutoff=shiftDate(todayKey(),-NEWS_KEEP_DAYS);
+  return items.filter(n=>n && n.id && (!n.date || n.date>=cutoff))
+              .sort((a,b)=>(b.date||"").localeCompare(a.date||""))
+              .slice(0,NEWS_MAX);
+}
+/* Merge, never replace: a delivery adds and updates, and an item Amber has
+   already dealt with keeps its read / task state. Returns how many were new. */
+function mergeNews(incoming, stamp){
+  const disk=readNewsStore();
+  const by={};
+  disk.items.forEach(n=>{ if(n&&n.id) by[n.id]=n; });
+  state.news.forEach(n=>{ if(n&&n.id) by[n.id]=Object.assign({},by[n.id],n); });
+  let added=0;
+  (incoming||[]).forEach(n=>{
+    if(!n||!n.id) return;
+    const old=by[n.id];
+    if(old) by[n.id]=Object.assign({},n,{read:old.read,taskAdded:old.taskAdded});
+    else { by[n.id]=Object.assign({read:false},n); added++; }
+  });
+  state.news=pruneNews(Object.keys(by).map(k=>by[k]));
+  if(stamp) state.newsAt=stamp;
+  saveNews();
+  return added;
+}
+/* Compact wire format, same spirit as the v2 share payload: positional arrays so
+   the whole digest still fits in a URL.
+   [id, date, time, title, summary, catIndex, course, from, whenKey, whenText] */
+function unpackNews(p){
+  const cats=NEWS_CATS.map(c=>c.key);
+  return (p.i||[]).map(a=>({
+    id:a[0], date:a[1]||todayKey(), time:a[2]||"", title:a[3]||"", summary:a[4]||"",
+    cat:cats[a[5]]||"announce", course:a[6]||"", from:a[7]||"",
+    whenKey:a[8]||null, whenText:a[9]||""
+  }));
+}
+async function consumeNewsLink(){
+  const h=location.hash;
+  if(!h || !h.startsWith("#n=")) return false;
+  history.replaceState(null,"",location.pathname);
+  let raw;
+  try{ raw=JSON.parse(await decodeShareHash("#d="+h.slice(3))); }
+  catch(e){
+    try{ raw=JSON.parse(new TextDecoder().decode(b64urlToBytes(h.slice(3)))); }
+    catch(e2){ toast("That news link was damaged in transit"); return true; }
+  }
+  if(!raw || !Array.isArray(raw.i)){ toast("That link didn't contain news"); return true; }
+  const added=mergeNews(unpackNews(raw), raw.at||new Date().toISOString());
+  go("news");
+  toast(added?`${added} new update${added===1?"":"s"} from your inbox 📬`:"Inbox checked — nothing new");
+  return true;
+}
+
 /* ---------- DATA / SETTINGS ---------- */
 function renderData(){
   const st=state.settings;
@@ -1117,15 +1451,27 @@ function renderData(){
         <button class="btn btn-soft grow" onclick="document.getElementById('importArea').style.display='block'">⬆ Import</button>
       </div>
       <div id="importArea" style="display:none">
-        <p class="muted" style="margin-bottom:6px">Paste a <b>phone link</b> or a backup here — either works. Or choose a backup file:</p>
+        <p class="muted" style="margin-bottom:6px">Paste a <b>phone link</b>, a <b>news link</b> or a backup here — all three work. Or choose a backup file:</p>
         <input type="file" id="importFile" accept=".json" style="margin-bottom:8px" onchange="importFromFile(this)">
-        <textarea id="importText" placeholder="Paste your phone link (https://…#d=…) or a backup"></textarea>
+        <textarea id="importText" placeholder="Paste a link (https://…#d=… or …#n=…) or a backup"></textarea>
         <button class="btn btn-primary btn-block" style="margin-top:8px" onclick="importFromText()">Load it in</button>
       </div>
     </div>
     <div class="card"><h2>📲 Your phone</h2>
       <p class="muted" style="margin-bottom:10px">Each device — and on iPhone, each <i>installed app</i> — keeps its own copy of your data. Make a link to carry everything across in one go.</p>
       <button class="btn btn-primary btn-block" onclick="openShareModal()">Make a link for my phone</button>
+    </div>
+    <div class="card"><h2>📬 News &amp; updates</h2>
+      <p class="muted" style="margin-bottom:10px">Your UTD inbox (<b>Dal325077@utdallas.edu</b>) is checked once a
+      day on your laptop, and anything worth knowing is written to the <b>News</b> tab. It only ever
+      <b>reads</b> — nothing is opened, marked as read, replied to or deleted.</p>
+      <p class="tiny" style="margin-bottom:10px">${state.news.length
+        ? "Holding "+state.news.length+" update"+(state.news.length===1?"":"s")+(state.newsAt?", last checked "+new Date(state.newsAt).toLocaleString():"")+"."
+        : "Nothing delivered yet."}</p>
+      <div class="row">
+        <button class="btn btn-soft grow" onclick="go('news')">Open News</button>
+        <button class="btn btn-danger grow" onclick="clearNews()">Clear news</button>
+      </div>
     </div>
     <div class="card"><h2>🌱 Fresh start</h2>
       <div class="row">
@@ -1145,7 +1491,7 @@ function saveSettings(){
   invalidatePlans(); persist(); toast("Preferences saved ✓");
 }
 function exportData(){
-  const json=JSON.stringify({version:1,exported:new Date().toISOString(),settings:state.settings,schedules:state.schedules,tasks:state.tasks},null,2);
+  const json=JSON.stringify({version:1,exported:new Date().toISOString(),settings:state.settings,schedules:state.schedules,tasks:state.tasks,news:state.news,newsAt:state.newsAt},null,2);
   try{
     const blob=new Blob([json],{type:"application/json"});
     const a=document.createElement("a");
@@ -1170,6 +1516,23 @@ function importFromFile(input){
 async function importFromText(){
   const raw=(document.getElementById("importText").value||"").trim();
   if(!raw){ toast("Paste a backup or a phone link first"); return; }
+
+  // a news digest from the daily mail routine
+  const nAt=raw.indexOf("#n=");
+  if(nAt>-1 || /^n=/.test(raw)){
+    const frag=(nAt>-1?raw.slice(nAt):"#"+raw).split(/\s/)[0];
+    let parsed;
+    try{ parsed=JSON.parse(await decodeShareHash("#d="+frag.slice(3))); }
+    catch(e){
+      try{ parsed=JSON.parse(new TextDecoder().decode(b64urlToBytes(frag.slice(3)))); }
+      catch(e2){ toast("That news link is damaged — copy the whole thing"); return; }
+    }
+    if(!parsed || !Array.isArray(parsed.i)){ toast("That link didn't contain news"); return; }
+    const added=mergeNews(unpackNews(parsed), parsed.at||new Date().toISOString());
+    go("news");
+    toast(added?`${added} new update${added===1?"":"s"} loaded 📬`:"Nothing new in that link");
+    return;
+  }
 
   const hashAt=raw.indexOf("#d="), jAt=raw.indexOf("#j=");
   let hash=null;
@@ -1201,6 +1564,8 @@ async function importFromText(){
 function applyImported(data){
   state.settings=Object.assign({dayStart:"07:00",dayEnd:"22:30",focusLen:45,breakLen:10,buffer:10},data.settings||{});
   state.schedules=data.schedules; state.tasks=data.tasks; state.plans={};
+  // news is additive — a backup restore should never drop updates already here
+  if(Array.isArray(data.news)) mergeNews(data.news, data.newsAt||state.newsAt);
   persist();
 }
 function resetAll(){
@@ -1421,9 +1786,12 @@ function initDisclaimer(){
   }
 }
 loadPersisted();
+loadNews();
 initDisclaimer();
 render();
-consumeShareLink();
+/* A "#n=" hash is a news delivery from the daily mail routine; "#d=" / "#j=" is
+   a whole-dataset transfer from another device. They must not both fire. */
+consumeNewsLink().then(handled=>{ if(!handled) consumeShareLink(); });
 if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")){
   navigator.serviceWorker.register("sw.js").catch(()=>{});
 }
