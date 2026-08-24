@@ -202,6 +202,17 @@
   .rule-day .w{flex:1;font-size:13px}
   .rule-day .w b{display:block;font-weight:700}
   .rule-day .w span{color:var(--ink-soft);font-size:11.5px}
+  .exam-row{display:flex;gap:11px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line)}
+  .exam-row:last-child{border-bottom:none}
+  .exam-row.tight{padding:6px 0}
+  .exam-row .ed{flex:0 0 84px;font-size:11.5px;font-weight:800;color:var(--ink-soft);padding-top:1px;line-height:1.3}
+  .exam-row .ed.math{color:var(--mint-deep)}
+  .exam-row .ed.phys{color:var(--peach-deep)}
+  .exam-row .ed.ecs{color:var(--lav-deep)}
+  .exam-row .ed.window{color:var(--butter-deep)}
+  .exam-row .ew{flex:1;font-size:13px;min-width:0}
+  .exam-row .ew b{display:block;font-weight:700}
+  .exam-row .ew span{color:var(--ink-soft);font-size:11.5px}
   .late-row{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line)}
   .late-row:last-child{border-bottom:none}
   .late-row .lc{flex:0 0 84px;font-size:12px;font-weight:800}
@@ -724,6 +735,22 @@ const WEEK_RHYTHM=[
   ["SAT","RHET 1302 — everything","11:59pm via Canvas / TurnItIn"],
   ["SUN","PHYS 2325 Mastering homework","11:59pm"]
 ];
+const EXAM_DATES=[
+  ["Aug 24 – Sep 4","window","PHYS 1301 · Mechanics pretest","Test Center (SPN2 or ARC) — reserve 48h ahead"],
+  ["Mon Sep 21","ecs","ECS 1210 · Quiz 1","Paper-based coding fluency — 35 min, handwritten, no machine, no notes"],
+  ["Thu Sep 24","phys","PHYS 2325 · Exam 1","Chapters 1–3 — in class, closed book"],
+  ["Fri Sep 25","math","MATH 2419 · Exam I","8:30–9:45pm, SCI 1.220"],
+  ["Mon Oct 12","ecs","ECS 1210 · Quiz 2","Problem solving I: conditionals — 35 min, machine allowed"],
+  ["Thu Oct 22","phys","PHYS 2325 · Exam 2","Chapters 4–6 — in class, closed book"],
+  ["Mon Oct 26","ecs","ECS 1210 · Quiz 3","Problem solving II: loops & 1D arrays — 35 min, machine allowed"],
+  ["Fri Nov 6","math","MATH 2419 · Exam II","8:30–9:45pm, SCI 1.220"],
+  ["Mon Nov 9","ecs","ECS 1210 · Quiz 4","Language transfer MATLAB → C++ — 30 min, plus a written justification"],
+  ["Nov 11 – 21","window","PHYS 1301 · Mechanics posttest","Test Center — booking really shuts Thu 19 Nov, 11:45am"],
+  ["Thu Nov 19","phys","PHYS 2325 · Exam 3","Chapters 7, 8, 9, 13 — in class, closed book"],
+  ["Mon Nov 30","ecs","ECS 1210 · Quiz 5","Hardware integration practical — 50 min, station-based, individual"],
+  ["Dec 11 – 16","phys","PHYS 2325 · Exam 4 (final)","Chapters 9–11, 14–16 — exact date TBD"],
+  ["TBA","math","MATH 2419 · Final exam","Comprehensive — date, time and room not yet announced"]
+];
 const LATE_RULES=[
   ["RHET 1302","<b>−20% per day</b>, no cap. Ask for an extension <b>before</b> the deadline — after it, there is no route back."],
   ["ECS 1210","<b>−10% per day</b> for 3 days, then not accepted. zyBooks deadlines are firm, but finish before the next quiz and you still get 50% of the zyLab points."],
@@ -739,6 +766,12 @@ const COURSE_RULES=[
         "Put <b>“ECS 1210”</b> in the subject line. Grade disputes in writing within <b>two weeks</b>."],
    grade:[["Quizzes (5)","30%"],["Design project — final package","15%"],["Design project — Phase 5","15%"],["In-class computational (2 dropped)","10%"],["In-class design (2 dropped)","10%"],["Computational homework (8)","10%"],["Design deliverables, Phases 0–4","10%"]],
    scale:"A+ 97 · A 92 · A− 90 · B+ 87 · B 82 · B− 80 · C+ 77 · C 72 · C− 70",
+   exams:[["Mon Sep 21","Quiz 1 — paper-based coding fluency (35 min, handwritten, no machine or notes)"],
+          ["Mon Oct 12","Quiz 2 — problem solving I: conditionals (35 min, machine allowed)"],
+          ["Mon Oct 26","Quiz 3 — problem solving II: loops & 1D arrays (35 min, machine allowed)"],
+          ["Mon Nov 9","Quiz 4 — language transfer MATLAB → C++ (30 min + written tool justification)"],
+          ["Mon Nov 30","Quiz 5 — hardware integration practical (50 min, station-based, individually assessed)"]],
+   examnote:"All five are in class on a computational day, and together they're 30% of your grade. Make-ups need documented cause and prior notice.",
    rules:["<b>First class each week is computational</b> — MATLAB to week 10, C++ from 11, Arduino from 13. <b>Second class is design</b> — the coffee-grinder teardown, in a fixed team of five from Week 3.",
           "<b>Document everything before you remove it.</b> Teams must reassemble the grinder non-destructively by Week 16.",
           "Quizzes are proctored — no AI. Make-ups need documented cause <i>and</i> prior notice.",
@@ -766,8 +799,12 @@ const COURSE_RULES=[
         "Announcements and the gradebook live on the <b>MATH 2419.701</b> Canvas page, not the lecture page."],
    grade:[["Final exam (comprehensive)","30%"],["Midterm Exam I","25%"],["Midterm Exam II","25%"],["Quizzes (lowest dropped)","15%"],["Problem-session participation","5%"]],
    scale:"A+ 96.66 · A 93.33 · A− 90 · B+ 86.66 · B 83.33 · B− 80 · C+ 76.66 · C 73.33 · C− 70",
+   exams:[["Fri Sep 25","Exam I — 8:30–9:45pm, SCI 1.220"],
+          ["Fri Nov 6","Exam II — 8:30–9:45pm, SCI 1.220"],
+          ["TBA","Final exam — comprehensive, date and room not yet announced"],
+          ["Every Fri","Quiz in the 8:00am problem session — 11 in total, lowest dropped"]],
+   examnote:"Both midterms are Friday <b>evening</b> sittings, not in your normal class slot. The weekly quizzes come straight from the homework that's never collected.",
    rules:["Three enrolments, one course: <b>.002</b> is the lecture, <b>.301</b> is the mandatory Friday problem session where quizzes happen, <b>.701</b> is the exam section that never meets.",
-          "<b>Exam I</b> Fri 25 Sep, 8:30–9:45pm, SCI 1.220 · <b>Exam II</b> Fri 6 Nov, same time and room · <b>Final</b> TBA.",
           "<b>No calculators, phones, computers or tablets</b> on any quiz or exam.",
           "Homework is posted every Tuesday and is <i>not</i> submitted — but the quizzes are built directly from it.",
           "Participation needs you at <i>all</i> problem sessions, present for 75% of each.",
@@ -780,6 +817,11 @@ const COURSE_RULES=[
         "Slides go to Box before Tuesday's lecture; finalised versions to eLearning by Thursday midnight."],
    grade:[["Four exams — best 3 of 4, 26 pts each","78 pts"],["Mastering Physics homework","17 pts"],["In-class quizzes & attendance","5 pts"],["“Puzzles for Gold” (extra)","+5–10"],["Pretest + posttest (extra)","+2"]],
    scale:"A+ >97 · A 93 · A− 90 · B+ 87 · B 83 · B− 80",
+   exams:[["Thu Sep 24","Exam 1 — Chapters 1–3"],
+          ["Thu Oct 22","Exam 2 — Chapters 4–6"],
+          ["Thu Nov 19","Exam 3 — Chapters 7, 8, 9, 13"],
+          ["Dec 11–16","Exam 4 / final — Chapters 9–11, 14–16, exact date TBD"]],
+   examnote:"All four run <b>during lecture</b> and cover only material since the last one — none are cumulative. Only your <b>best 3 of 4</b> count, and there are no make-ups.",
    rules:["Homework is all through <b>MasteringPhysics</b>, course ID <b>zakhidov18676</b>. Released Thursday 11:59pm, due 11:59pm the Sunday of the following week — about 10 days each. <b>20 attempts per question.</b>",
           "All four exams are <b>during lecture, closed book</b>, and cover only material since the last one — they aren't cumulative.",
           "<b>There are no make-up exams.</b> Best-3-of-4 is the entire safety net.",
@@ -807,6 +849,9 @@ const COURSE_RULES=[
         "eLearning enrolment problems: Katrina Adams (katrina.adams@utdallas.edu)."],
    grade:[["Pretest — Mon 24 Aug to Fri 4 Sep","window"],["Posttest — Wed 11 Nov to Sat 21 Nov","window"],["Worth in PHYS 2325","+2 extra"]],
    scale:"",
+   exams:[["Aug 24 – Sep 4","Pretest window — book a seat at least 48h ahead"],
+          ["Nov 11 – 21","Posttest window — booking really shuts Thu 19 Nov, 11:45am"]],
+   examnote:"These <i>are</i> the whole course. Both are ~1 hour, multiple choice, at the Test Center.",
    rules:["Not really a class — a department survey of how students think about mechanics, taken twice. About an hour each, multiple choice.",
           "You earn the points by <b>taking</b> it, not by scoring well. No penalty for skipping — but don't guess your way through.",
           "<b>Reserve a seat at least 48 hours ahead.</b> The centre fills up.",
@@ -825,6 +870,13 @@ function renderRules(){
     lastDay=d;
   }
   html+=`</div>`;
+
+  html+=`<div class="card"><h2>📝 Exam dates</h2>
+    <p class="muted" style="margin-bottom:8px">Everything that can't be re-sat, in order.</p>`;
+  for(const [when,kind,what,note] of EXAM_DATES){
+    html+=`<div class="exam-row"><div class="ed ${kind}">${esc(when)}</div><div class="ew"><b>${esc(what)}</b><span>${esc(note)}</span></div></div>`;
+  }
+  html+=`<div class="warnbox"><b>The crunch:</b> physics Exam 1 is Thu 24 Sep and maths Exam I is 8:30pm the very next night. The same Thu/Fri pairing repeats 22–23 Oct and 19–20 Nov — start those revision blocks a week early.</div></div>`;
 
   html+=`<div class="card"><h2>⚠️ If you're late</h2>
     <p class="muted" style="margin-bottom:8px">One hour late in physics costs 1%. One day late in rhetoric costs 20%.</p>`;
@@ -845,6 +897,12 @@ function renderRules(){
     for(const [k,v] of c.grade) html+=`<div class="gr"><span>${esc(k)}</span><span>${esc(v)}</span></div>`;
     if(c.scale) html+=`<p class="tiny" style="margin-top:8px">${esc(c.scale)}</p>`;
     html+=`</div>`;
+    if(c.exams){
+      html+=`<div class="rsec"><h4>Exams &amp; quizzes</h4>`;
+      for(const [when,what] of c.exams) html+=`<div class="exam-row tight"><div class="ed">${esc(when)}</div><div class="ew"><b>${esc(what)}</b></div></div>`;
+      if(c.examnote) html+=`<p class="tiny" style="margin-top:8px">${c.examnote}</p>`;
+      html+=`</div>`;
+    }
     html+=`<div class="rsec"><h4>Rules worth not tripping over</h4><ul>`;
     for(const r of c.rules) html+=`<li>${r}</li>`;
     html+=`</ul></div>`;
