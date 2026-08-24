@@ -1178,6 +1178,7 @@ const NEWS_CATS=[
   {key:"action",   label:"Action needed", chip:"peach",  icon:"✋"},
   {key:"announce", label:"Announcement",  chip:"lav",    icon:"📣"},
   {key:"admin",    label:"Admin",         chip:"butter", icon:"🗂"},
+  {key:"grade",    label:"Grade",         chip:"mint",   icon:"🎯"},
 ];
 const COURSE_CHIP={"ECS 1210":"lav","ECS 1100":"lav","MATH 2419":"mint","PHYS 2325":"peach",
                    "PHYS 2125":"peach","PHYS 1301":"peach","RHET 1302":"rose"};
@@ -1192,8 +1193,16 @@ function courseChip(c){
   return hit?COURSE_CHIP[hit]:"sky";
 }
 function unseenNews(){ return state.news.filter(n=>!n.read); }
+/* "9:44 AM" sorts above "4:07 PM" as plain text, so times become minutes first. */
+function newsMin(t){
+  const m=/^(\d{1,2}):(\d{2})\s*([AP])M$/i.exec((t||"").trim());
+  if(!m) return -1;
+  let h=+m[1]%12; if(m[3].toUpperCase()==="P") h+=12;
+  return h*60+(+m[2]);
+}
 function newsSorted(){
-  return state.news.slice().sort((a,b)=>(b.date||"").localeCompare(a.date||"") || (b.time||"").localeCompare(a.time||""));
+  return state.news.slice().sort((a,b)=>
+    (b.date||"").localeCompare(a.date||"") || (newsMin(b.time)-newsMin(a.time)));
 }
 function upcomingNews(){
   const tk=todayKey();
@@ -1687,7 +1696,10 @@ function currentPayload(){ return JSON.stringify(packState()); }
 function normalizeIncoming(data){
   if(data && data.v===2 && Array.isArray(data.t)) return unpackState(data);
   if(data && Array.isArray(data.schedules) && Array.isArray(data.tasks))
-    return {settings:data.settings||{},schedules:data.schedules,tasks:data.tasks};
+    // news rides along in full backups but deliberately not in the phone link —
+    // that link is size-critical, and the mail routine only runs on the laptop.
+    return {settings:data.settings||{},schedules:data.schedules,tasks:data.tasks,
+            news:Array.isArray(data.news)?data.news:null, newsAt:data.newsAt||null};
   return null;
 }
 async function buildShareLink(plain){
