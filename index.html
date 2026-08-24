@@ -202,6 +202,11 @@
   .rule-day .w{flex:1;font-size:13px}
   .rule-day .w b{display:block;font-weight:700}
   .rule-day .w span{color:var(--ink-soft);font-size:11.5px}
+  .optpill{display:inline-block;background:var(--mint);color:#2e7a5c;font-size:9.5px;font-weight:800;letter-spacing:.03em;border-radius:999px;padding:1px 6px;vertical-align:1px}
+  .tl-item.fixed.opt{border-style:dashed}
+  .optrow{display:flex;gap:9px;align-items:flex-start;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:12px;cursor:pointer}
+  .optrow input{margin-top:3px;width:17px;height:17px;accent-color:var(--lav-deep);flex:0 0 auto}
+  .optrow span{font-size:13px;line-height:1.35}
   .exam-row{display:flex;gap:11px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line)}
   .exam-row:last-child{border-bottom:none}
   .exam-row.tight{padding:6px 0}
@@ -347,7 +352,7 @@ function fixedEventsFor(dateKey){
   for(const s of state.schedules)
     for(const b of s.blocks)
       if(b.days.includes(dow))
-        evs.push({ label:b.label||s.name, sched:s.name, color:s.color, start:t2m(b.start), end:t2m(b.end) });
+        evs.push({ label:b.label||s.name, sched:s.name, color:s.color, start:t2m(b.start), end:t2m(b.end), optional:!!b.optional });
   evs.sort((a,b)=>a.start-b.start);
   return evs;
 }
@@ -376,7 +381,8 @@ function buildPlan(dateKey){
   const dayStart=t2m(st.dayStart), dayEnd=t2m(st.dayEnd);
   const focus=Math.max(15,+st.focusLen||45), brk=Math.max(0,+st.breakLen||10), buf=Math.max(0,+st.buffer||0);
   const fixed=fixedEventsFor(dateKey);
-  const merged=mergeSpans(fixed);
+  // Optional blocks (drop-in office hours, etc.) are shown but never block study planning.
+  const merged=mergeSpans(fixed.filter(e=>!e.optional));
 
   // planning start: if planning today, don't schedule into the past
   let planFrom=dayStart;
@@ -470,7 +476,7 @@ function renderToday(){
   const studyItems=plan.items.filter(i=>i.kind==="study");
   const plannedMin=studyItems.reduce((s,i)=>s+(i.end-i.start),0);
   const doneMin=studyItems.filter(i=>plan.doneChunks[i.id]).reduce((s,i)=>s+(i.end-i.start),0);
-  const fixedMin=mergeSpans(fixed).reduce((s,g)=>s+(g.end-g.start),0);
+  const fixedMin=mergeSpans(fixed.filter(f=>!f.optional)).reduce((s,g)=>s+(g.end-g.start),0);
   const windowMin=t2m(state.settings.dayEnd)-t2m(state.settings.dayStart);
   const freeMin=Math.max(0,windowMin-fixedMin-plannedMin);
   const pct=plannedMin?Math.round(doneMin/plannedMin*100):0;
@@ -540,11 +546,11 @@ function renderToday(){
       const time=`<div class="tl-time">${m2t(it.start)}<small>${m2t(it.end)}</small></div>`;
       if(it.kind==="fixed"){
         const c=colorOf(it.color);
-        html+=`<div class="tl-item fixed ${isNow?"now":""}" style="background:${c.bg}66">${time}
-          <div class="tl-bar" style="background:${c.dot}"></div>
+        html+=`<div class="tl-item fixed ${isNow?"now":""} ${it.optional?"opt":""}" style="background:${c.bg}${it.optional?"33":"66"}">${time}
+          <div class="tl-bar" style="background:${c.dot}${it.optional?";opacity:.45":""}"></div>
           <div style="padding-left:8px">
-            <div class="t-title" style="color:${c.text}">${esc(it.label)}</div>
-            <div class="t-sub">${esc(it.sched)} · ${durFmt(it.end-it.start)}</div>
+            <div class="t-title" style="color:${c.text}">${esc(it.label)}${it.optional?` <span class="optpill">drop-in</span>`:""}</div>
+            <div class="t-sub">${esc(it.sched)} · ${durFmt(it.end-it.start)}${it.optional?" · optional":""}</div>
           </div></div>`;
       } else if(it.kind==="study"){
         const done=!!state.plans[dk].doneChunks[it.id];
@@ -611,8 +617,8 @@ function renderSchedules(){
       html+=`<div class="block-line">
         <span class="block-dot" style="background:${c.dot}"></span>
         <div class="block-info">
-          <b>${esc(b.label||s.name)}</b>
-          <span class="tiny">${b.days.map(d=>DAYS[d]).join(" · ")} — ${m2t(t2m(b.start))} to ${m2t(t2m(b.end))}</span>
+          <b>${esc(b.label||s.name)}${b.optional?` <span class="optpill">drop-in</span>`:""}</b>
+          <span class="tiny">${b.days.map(d=>DAYS[d]).join(" · ")} — ${m2t(t2m(b.start))} to ${m2t(t2m(b.end))}${b.note?" · "+esc(b.note):""}</span>
         </div>
         <button class="icon-btn" onclick="deleteBlock('${s.id}','${b.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>`;
@@ -677,7 +683,7 @@ function importScan(){
     if(!days.length) continue;
     let start=b2.start, end=b2.end;
     if(t2m(end)<=t2m(start)) end="23:59"; // overnight shifts get clipped to end of day
-    clean.push({id:uid(),label:String(b2.label||"").slice(0,40),days:[...new Set(days)].sort(),start,end});
+    clean.push({id:uid(),label:String(b2.label||"").slice(0,40),days:[...new Set(days)].sort(),start,end,optional:!!b2.optional,note:b2.note?String(b2.note).slice(0,60):""});
   }
   if(!clean.length){ toast("No usable time blocks found — double-check Claude's reply"); return; }
   state.schedules.push({id:uid(),name,color,blocks:clean});
@@ -710,6 +716,9 @@ function openBlockModal(sid){
       <label class="fld"><span>Starts</span><input type="time" id="blkStart" value="08:30"></label>
       <label class="fld"><span>Ends</span><input type="time" id="blkEnd" value="15:00"></label>
     </div>
+    <label class="optrow"><input type="checkbox" id="blkOpt">
+      <span><b>Drop-in / optional</b><br><span class="tiny">Shown on your day, but study time still gets planned over it — good for office hours.</span></span>
+    </label>
     <button class="btn btn-primary btn-block" onclick="saveBlock('${sid}')">Add block</button>`);
 }
 function toggleDay(el,i){ el.classList.toggle("on"); if(modalDays.includes(i)) modalDays=modalDays.filter(x=>x!==i); else modalDays.push(i); }
@@ -719,7 +728,8 @@ function saveBlock(sid){
   if(!start||!end){ toast("Pick start and end times"); return; }
   if(t2m(end)<=t2m(start)){ toast("End time must be after start time"); return; }
   if(modalDays.length===0){ toast("Pick at least one day"); return; }
-  s.blocks.push({id:uid(),label:document.getElementById("blkLabel").value.trim(),days:[...modalDays].sort(),start,end});
+  const opt=document.getElementById("blkOpt");
+  s.blocks.push({id:uid(),label:document.getElementById("blkLabel").value.trim(),days:[...modalDays].sort(),start,end,optional:!!(opt&&opt.checked)});
   invalidatePlans(); closeModal(); render(); toast("Block added ✓");
 }
 
