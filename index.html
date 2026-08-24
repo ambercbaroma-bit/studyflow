@@ -194,6 +194,40 @@
   }
   .warn{background:var(--butter);border-radius:14px;padding:12px 14px;font-size:13px;color:#7a5f14;margin-bottom:12px}
 
+  /* ---- rules tab ---- */
+  .rule-day{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+  .rule-day:last-child{border-bottom:none}
+  .rule-day .d{flex:0 0 42px;font-size:11px;font-weight:800;color:var(--lav-deep);letter-spacing:.05em;padding-top:2px}
+  .rule-day.quiet .d{color:var(--ink-faint)}
+  .rule-day .w{flex:1;font-size:13px}
+  .rule-day .w b{display:block;font-weight:700}
+  .rule-day .w span{color:var(--ink-soft);font-size:11.5px}
+  .late-row{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line)}
+  .late-row:last-child{border-bottom:none}
+  .late-row .lc{flex:0 0 84px;font-size:12px;font-weight:800}
+  .late-row .lw{flex:1;font-size:12.5px;color:var(--ink-soft)}
+  .late-row .lw b{color:var(--ink)}
+  details.course{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);border:1px solid var(--line);margin-bottom:10px;overflow:hidden}
+  details.course>summary{
+    list-style:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:9px;flex-wrap:wrap;
+  }
+  details.course>summary::-webkit-details-marker{display:none}
+  details.course>summary .cn{font-size:14px;font-weight:800;flex:1;min-width:110px}
+  details.course>summary .cw{font-size:11px;color:var(--ink-faint);font-weight:600;width:100%}
+  details.course[open]>summary{border-bottom:1px solid var(--line)}
+  .course-body{padding:4px 16px 16px}
+  .rsec{margin-top:14px}
+  .rsec h4{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:7px}
+  .rsec p{font-size:13px;margin-bottom:7px}
+  .rsec p:last-child{margin-bottom:0}
+  .rsec ul{margin:0;padding-left:17px;font-size:13px}
+  .rsec ul li{margin-bottom:6px}
+  .rsec ul li:last-child{margin-bottom:0}
+  .gr{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:4px 0;border-bottom:1px solid var(--line)}
+  .gr:last-child{border-bottom:none}
+  .gr span:last-child{font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink-soft);white-space:nowrap}
+  .gr.tot span:last-child{color:var(--ink)}
+  .warnbox{background:var(--butter);border-radius:12px;padding:10px 12px;font-size:12.5px;margin-top:12px}
   .seg{display:flex;background:var(--lav);border-radius:13px;padding:4px;margin-bottom:14px}
   .seg button{flex:1;border:none;background:transparent;border-radius:10px;padding:8px 6px;font-size:13px;font-weight:700;color:#5b4fa0;cursor:pointer;font-family:inherit}
   .seg button.on{background:#fff;box-shadow:0 1px 4px rgba(100,90,140,.15)}
@@ -249,6 +283,10 @@
     <button data-tab="tasks" onclick="go('tasks')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>
       Tasks
+    </button>
+    <button data-tab="rules" onclick="go('rules')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H19v18H6.5A2.5 2.5 0 0 0 4 22z"/><path d="M9 7h7M9 11h7"/></svg>
+      Rules
     </button>
     <button data-tab="data" onclick="go('data')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5h.1a1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -394,11 +432,12 @@ const main=document.getElementById("main");
 function go(tab){ state.tab=tab; render(); window.scrollTo(0,0); }
 function render(){
   document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active",b.dataset.tab===state.tab));
-  const subs={today:"Your balanced day, planned for you",schedules:"Your fixed commitments",tasks:"Everything on your plate",data:"Settings & saving your data"};
+  const subs={today:"Your balanced day, planned for you",schedules:"Your fixed commitments",tasks:"Everything on your plate",rules:"The rules of each class, simplified",data:"Settings & saving your data"};
   document.getElementById("headerSub").textContent=subs[state.tab];
   if(state.tab==="today") renderToday();
   else if(state.tab==="schedules") renderSchedules();
   else if(state.tab==="tasks") renderTasks();
+  else if(state.tab==="rules") renderRules();
   else renderData();
   persist();
 }
@@ -671,6 +710,149 @@ function saveBlock(sid){
   if(modalDays.length===0){ toast("Pick at least one day"); return; }
   s.blocks.push({id:uid(),label:document.getElementById("blkLabel").value.trim(),days:[...modalDays].sort(),start,end});
   invalidatePlans(); closeModal(); render(); toast("Block added ✓");
+}
+
+/* ---------- CLASS RULES (Fall 2026) ---------- */
+const WEEK_RHYTHM=[
+  ["MON","",""],
+  ["TUE","PHYS 2325 slides posted","To Box before lecture"],
+  ["TUE","MATH 2419 homework posted","Practice only — never submitted, but quizzes come from it"],
+  ["WED","ECS 1100 homework","11:59pm — the day before your Thursday section"],
+  ["THU","PHYS 2325 homework released","11:59pm, due the Sunday after next"],
+  ["FRI","ECS 1100 engagement + Connections","11:59pm — always Friday, never Sunday"],
+  ["FRI","MATH 2419 quiz","In the 8:00am problem session"],
+  ["SAT","RHET 1302 — everything","11:59pm via Canvas / TurnItIn"],
+  ["SUN","PHYS 2325 Mastering homework","11:59pm"]
+];
+const LATE_RULES=[
+  ["RHET 1302","<b>−20% per day</b>, no cap. Ask for an extension <b>before</b> the deadline — after it, there is no route back."],
+  ["ECS 1210","<b>−10% per day</b> for 3 days, then not accepted. zyBooks deadlines are firm, but finish before the next quiz and you still get 50% of the zyLab points."],
+  ["PHYS 2325","<b>−1% per hour</b> on Mastering homework. <b>No make-up exams</b> — but only your best 3 of 4 count, so one miss is absorbed."],
+  ["MATH 2419","Homework isn't submitted. Make-ups need a university-approved reason and <b>a week's notice</b>."],
+  ["ECS 1100","<b>3 days free</b>, then capped at 70%. In-class work can never be made up — but your 2 lowest are dropped."],
+  ["PHYS 1301","Test Center windows only. <b>Only the Test Center</b> can move a booking — neither instructor can."]
+];
+const COURSE_RULES=[
+  {code:"ECS 1210.002",color:"lav",name:"Foundations in Engineering & CS I",when:"Mon & Wed 8:30–10:45am · ECSS 2.302",
+   who:["<b>Dr. Dan Burleson</b> — daniel.burleson@UTDallas.edu<br>ECSS 2.303B · (972) 883-4392<br>Office hours Mon 12:30–2:30, Wed 10–11",
+        "<b>TAs</b> — Laasya Ankem (sna220003@utdallas.edu), Haarshini Dhar (hxd230031@utdallas.edu)",
+        "Put <b>“ECS 1210”</b> in the subject line. Grade disputes in writing within <b>two weeks</b>."],
+   grade:[["Quizzes (5)","30%"],["Design project — final package","15%"],["Design project — Phase 5","15%"],["In-class computational (2 dropped)","10%"],["In-class design (2 dropped)","10%"],["Computational homework (8)","10%"],["Design deliverables, Phases 0–4","10%"]],
+   scale:"A+ 97 · A 92 · A− 90 · B+ 87 · B 82 · B− 80 · C+ 77 · C 72 · C− 70",
+   rules:["<b>First class each week is computational</b> — MATLAB to week 10, C++ from 11, Arduino from 13. <b>Second class is design</b> — the coffee-grinder teardown, in a fixed team of five from Week 3.",
+          "<b>Document everything before you remove it.</b> Teams must reassemble the grinder non-destructively by Week 16.",
+          "Quizzes are proctored — no AI. Make-ups need documented cause <i>and</i> prior notice.",
+          "Tell the instructor in advance if you'll miss a design day; an unannounced absence hits your teammates.",
+          "AI is fine for explaining concepts, reading errors, or reviewing code you already wrote — note it in a comment at the top. Not for generating submitted code, design docs, or reflections.",
+          "Setup: zyBooks code <b>UTDALLASECS1210Fall2026</b> · MATLAB 2026a · Visual Studio or Online GDB · Arduino kits provided."],
+   warn:"Resubmitting after the deadline counts as late even if you submitted something on time."},
+  {code:"ECS 1100.004",color:"sky",name:"Introduction to Engineering & CS",when:"Thu 2:30–3:50pm · ECSW 1.315",
+   who:["<b>Dr. Hans Djalali</b> — Hans.Djalali@UTDallas.edu<br>ECSS 2.601 · Tue 1:30–3:30, Wed 2:30–4:30",
+        "<b>Dr. Poria Dorali</b> — Poria.Dorali@UTDallas.edu<br>ECSN 3.704 · M/W 2:30–3:30, T/Th 12–1",
+        "<b>TA</b> — Musa Ibne Mannan (musa314@utdallas.edu)",
+        "Put <b>“ECS 1100”</b> in the subject line. Replies within two business days; after 5pm Friday means Monday."],
+   grade:[["In-class participation (15 sessions)","30%"],["Engagement requirement (5 activities)","30%"],["Homework","30%"],["Connections (talkies or video)","10%"]],
+   scale:"",
+   rules:["<b>Your in-class submission is your attendance record.</b> Several items need something you can only get in the room — a partner's name, a photo of your own work.",
+          "Homework is due <b>Wednesday 11:59pm</b> (day before your Thursday class), at most two items. Engagement and Connections are due <b>Friday 11:59pm</b>, always.",
+          "In-class activities can't be made up; two are dropped.",
+          "<b>Thursday sections miss Session 15</b> (reading day) — that week you must attend another section.",
+          "Engagement = 5 campus activities, one from each category A–D plus a free choice, with a selfie as proof. A photo with a faculty member earns extra credit.",
+          "AI is fine for brainstorming, checking understanding, or feedback on a draft — note it at the end. Not for generating reflections, logs, or in-class items."],
+   warn:"Faking an event attendance or a proof-of-attendance selfie is a conduct violation, not just an AI-policy one."},
+  {code:"MATH 2419",color:"mint",name:"Calculus II",when:"Lecture Tue/Thu 10:00–11:15am · SCI 2.230",
+   who:["<b>Mohammad Ahsan</b> (lecture) — mkahsan@utdallas.edu<br>FN 3.120D · (972) 883-6336<br>Office hours Tue/Thu 1–2pm & by appointment",
+        "<b>Travis Hensley</b> (problem session) — Fri 8:00–9:50am, FN 2.204",
+        "Announcements and the gradebook live on the <b>MATH 2419.701</b> Canvas page, not the lecture page."],
+   grade:[["Final exam (comprehensive)","30%"],["Midterm Exam I","25%"],["Midterm Exam II","25%"],["Quizzes (lowest dropped)","15%"],["Problem-session participation","5%"]],
+   scale:"A+ 96.66 · A 93.33 · A− 90 · B+ 86.66 · B 83.33 · B− 80 · C+ 76.66 · C 73.33 · C− 70",
+   rules:["Three enrolments, one course: <b>.002</b> is the lecture, <b>.301</b> is the mandatory Friday problem session where quizzes happen, <b>.701</b> is the exam section that never meets.",
+          "<b>Exam I</b> Fri 25 Sep, 8:30–9:45pm, SCI 1.220 · <b>Exam II</b> Fri 6 Nov, same time and room · <b>Final</b> TBA.",
+          "<b>No calculators, phones, computers or tablets</b> on any quiz or exam.",
+          "Homework is posted every Tuesday and is <i>not</i> submitted — but the quizzes are built directly from it.",
+          "Participation needs you at <i>all</i> problem sessions, present for 75% of each.",
+          "<b>Show every step.</b> Missing work can mean reduced or zero credit even with the right answer."],
+   warn:""},
+  {code:"PHYS 2325.001",color:"peach",name:"Mechanics",when:"Tue/Thu 11:30am–12:45pm · SCI 1.210",
+   who:["<b>Dr. Anvar Zakhidov</b> — Zakhidov@utdallas.edu<br>SCI B.148 · (972) 883-6218 · by appointment via email or text",
+        "<b>Co-instructor</b> — Dr. Waqas Shabir",
+        "<b>TA</b> — Matthew Lochridge (matthew.lochridge@utdallas.edu)",
+        "Slides go to Box before Tuesday's lecture; finalised versions to eLearning by Thursday midnight."],
+   grade:[["Four exams — best 3 of 4, 26 pts each","78 pts"],["Mastering Physics homework","17 pts"],["In-class quizzes & attendance","5 pts"],["“Puzzles for Gold” (extra)","+5–10"],["Pretest + posttest (extra)","+2"]],
+   scale:"A+ >97 · A 93 · A− 90 · B+ 87 · B 83 · B− 80",
+   rules:["Homework is all through <b>MasteringPhysics</b>, course ID <b>zakhidov18676</b>. Released Thursday 11:59pm, due 11:59pm the Sunday of the following week — about 10 days each. <b>20 attempts per question.</b>",
+          "All four exams are <b>during lecture, closed book</b>, and cover only material since the last one — they aren't cumulative.",
+          "<b>There are no make-up exams.</b> Best-3-of-4 is the entire safety net.",
+          "Formula sheet arrives a couple of days beforehand. Photo ID on the desk.",
+          "Calculators required, but <b>no graphing, programmable, or text-function models</b> — a $10–20 scientific calculator with trig is right.",
+          "Questions about an exam grade must be raised within two weeks; after that grades are final."],
+   warn:""},
+  {code:"RHET 1302.026",color:"rose",name:"College Writing II",when:"Tue & Thu 8:30–9:45am · CB 1.102",
+   who:["<b>Yushuang Wei</b> — yushuang.wei@utdallas.edu<br>JO 3.704 · Visiting hours Thursdays 1–3pm",
+        "Use your UTD email. Replies within <b>three working days</b> (Mon–Fri)."],
+   grade:[["A4 — Position Paper","200 pts"],["Drafts, discussions, participation","200 pts"],["A2 — Research Prospectus","150 pts"],["A3 — Annotated Bibliography","150 pts"],["A1 — Statement of Purpose & AI comparison","100 pts"],["Peer reviews (4 × 25)","100 pts"],["Textbook assignments","100 pts"]],
+   scale:"1000 points total — not rounded in either direction",
+   rules:["Everything is due <b>Saturday 11:59pm</b> via Canvas/TurnItIn. Late costs <b>20% per day</b>.",
+          "<b>Attendance maths:</b> 4 free absences, then <b>−2.5% each</b>. Two tardies over 5 minutes — or early departures — equal one absence.",
+          "Only excused absences: religious holidays cleared 48 hours ahead, and sanctioned UTD activities with prior notice.",
+          "<b>No AI tools at all</b> — ChatGPT, Copilot, Google Translate, Grammarly.",
+          "MS Word and MLA 9th edition for everything, with a Works Cited list.",
+          "<b>Keep every draft until the semester ends</b> — documenting your process is part of academic integrity here.",
+          "Phone away. Laptop or tablet for class activities only, or you may be marked absent.",
+          "Nothing is accepted for credit after <b>16 December</b> without prior arrangements."],
+   warn:"AI detectors (ZeroGPT) and citation generators (EasyBib) can get your own writing flagged — don't run your work through them."},
+  {code:"PHYS 1301.701",color:"butter",name:"Mechanics Pretest & Posttest",when:"No class meetings · UTD Test Center",
+   who:["Search for the test under <b>P. Mac Alevey</b> — not your physics lecturer.",
+        "Book at ets.utdallas.edu/testing-center · SPN2 or the ARC Testing Center.",
+        "eLearning enrolment problems: Katrina Adams (katrina.adams@utdallas.edu)."],
+   grade:[["Pretest — Mon 24 Aug to Fri 4 Sep","window"],["Posttest — Wed 11 Nov to Sat 21 Nov","window"],["Worth in PHYS 2325","+2 extra"]],
+   scale:"",
+   rules:["Not really a class — a department survey of how students think about mechanics, taken twice. About an hour each, multiple choice.",
+          "You earn the points by <b>taking</b> it, not by scoring well. No penalty for skipping — but don't guess your way through.",
+          "<b>Reserve a seat at least 48 hours ahead.</b> The centre fills up.",
+          "The Test Center closes 1:00pm Saturday, so the posttest booking window really shuts <b>Thu 19 Nov at 11:45am</b>.",
+          "Tests must finish 15 minutes before closing time.",
+          "No books, notes, calculators, or devices. You don't even need a pen."],
+   warn:""}
+];
+function renderRules(){
+  let html=`<div class="card"><h2>⏰ Your week, by deadline</h2>
+    <p class="muted" style="margin-bottom:8px">Four of your six courses land on a fixed weekday.</p>`;
+  let lastDay="";
+  for(const [d,what,note] of WEEK_RHYTHM){
+    if(!what){ html+=`<div class="rule-day quiet"><div class="d">${d}</div><div class="w"><span>Nothing recurring</span></div></div>`; lastDay=d; continue; }
+    html+=`<div class="rule-day"><div class="d">${d===lastDay?"":d}</div><div class="w"><b>${what}</b><span>${note}</span></div></div>`;
+    lastDay=d;
+  }
+  html+=`</div>`;
+
+  html+=`<div class="card"><h2>⚠️ If you're late</h2>
+    <p class="muted" style="margin-bottom:8px">One hour late in physics costs 1%. One day late in rhetoric costs 20%.</p>`;
+  for(const [c,txt] of LATE_RULES) html+=`<div class="late-row"><div class="lc">${c}</div><div class="lw">${txt}</div></div>`;
+  html+=`<div class="warnbox"><b>Watch this one:</b> in both ECS courses, resubmitting after the deadline counts as late even if you submitted something on time.</div></div>`;
+
+  html+=`<h2 style="font-size:15px;font-weight:800;margin:18px 0 10px">📘 The rules of each class</h2>`;
+  for(const c of COURSE_RULES){
+    html+=`<details class="course"><summary>
+      <span class="chip ${c.color}">${esc(c.code)}</span>
+      <span class="cn">${esc(c.name)}</span>
+      <span class="cw">${esc(c.when)}</span>
+    </summary><div class="course-body">`;
+    html+=`<div class="rsec"><h4>Who to contact</h4>`;
+    for(const w of c.who) html+=`<p>${w}</p>`;
+    html+=`</div>`;
+    html+=`<div class="rsec"><h4>How the grade splits</h4>`;
+    for(const [k,v] of c.grade) html+=`<div class="gr"><span>${esc(k)}</span><span>${esc(v)}</span></div>`;
+    if(c.scale) html+=`<p class="tiny" style="margin-top:8px">${esc(c.scale)}</p>`;
+    html+=`</div>`;
+    html+=`<div class="rsec"><h4>Rules worth not tripping over</h4><ul>`;
+    for(const r of c.rules) html+=`<li>${r}</li>`;
+    html+=`</ul></div>`;
+    if(c.warn) html+=`<div class="warnbox">⚠️ ${c.warn}</div>`;
+    html+=`</div></details>`;
+  }
+  html+=`<p class="tiny" style="text-align:center;margin:16px 0 4px">Compiled from your Fall 2026 syllabi on 24 Aug 2026.<br>Canvas is the authority if anything here disagrees with it.</p>`;
+  main.innerHTML=html;
 }
 
 /* ---------- TASKS ---------- */
