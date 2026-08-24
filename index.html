@@ -1249,8 +1249,47 @@ function b64urlToBytes(str){
   for(let i=0;i<bin.length;i++) out[i]=bin.charCodeAt(i);
   return out;
 }
-function currentPayload(){
-  return JSON.stringify({v:1,settings:state.settings,schedules:state.schedules,tasks:state.tasks});
+/* v2 share payload: positional arrays, a subject dictionary and day offsets
+   instead of repeated keys and full dates. Roughly a third off the link. */
+function mm2hhmm(m){ return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0"); }
+function packState(){
+  const epoch=todayKey();
+  const subs=[...new Set(state.tasks.map(t=>t.subject).filter(Boolean))].sort();
+  const si={}; subs.forEach((s,i)=>si[s]=i);
+  const st=state.settings;
+  return {
+    v:2, e:epoch,
+    s:[st.dayStart,st.dayEnd,st.focusLen,st.breakLen,st.buffer],
+    u:subs,
+    c:state.schedules.map(s=>[s.name,s.color,s.blocks.map(b=>[
+        b.label||"", b.days.reduce((n,d)=>n|(1<<d),0), t2m(b.start), t2m(b.end),
+        b.optional?1:0, b.email||"", b.note||""])]),
+    t:state.tasks.map(t=>[t.title, t.subject?si[t.subject]:-1,
+        t.due?daysBetween(epoch,t.due):null, t.est, t.priority, t.doneMin||0, t.completed?1:0])
+  };
+}
+function unpackState(p){
+  const epoch=p.e||todayKey(), subs=p.u||[];
+  return {
+    settings:{dayStart:p.s[0],dayEnd:p.s[1],focusLen:p.s[2],breakLen:p.s[3],buffer:p.s[4]},
+    schedules:(p.c||[]).map(([name,color,blocks])=>({id:uid(),name,color,
+      blocks:(blocks||[]).map(([label,mask,st2,en,opt,email,note])=>{
+        const days=[]; for(let d=0;d<7;d++) if(mask&(1<<d)) days.push(d);
+        return {id:uid(),label,days,start:mm2hhmm(st2),end:mm2hhmm(en),
+                optional:!!opt,email:email||"",note:note||""};
+      })})),
+    tasks:(p.t||[]).map(([title,sidx,dueOff,est,pri,doneMin,done])=>({
+      id:uid(), title, subject:sidx>=0?(subs[sidx]||""):"",
+      due:(dueOff===null||dueOff===undefined)?null:shiftDate(epoch,dueOff),
+      est, priority:pri, doneMin:doneMin||0, completed:!!done }))
+  };
+}
+function currentPayload(){ return JSON.stringify(packState()); }
+function normalizeIncoming(data){
+  if(data && data.v===2 && Array.isArray(data.t)) return unpackState(data);
+  if(data && Array.isArray(data.schedules) && Array.isArray(data.tasks))
+    return {settings:data.settings||{},schedules:data.schedules,tasks:data.tasks};
+  return null;
 }
 async function buildShareLink(){
   const json=currentPayload();
@@ -1281,10 +1320,11 @@ async function consumeShareLink(){
   const h=location.hash;
   if(!h || !(h.startsWith("#d=")||h.startsWith("#j="))) return;
   history.replaceState(null,"",location.pathname);   // don't re-trigger on refresh
-  let data;
-  try{ data=JSON.parse(await decodeShareHash(h)); }
+  let raw;
+  try{ raw=JSON.parse(await decodeShareHash(h)); }
   catch(e){ toast("That link's data was damaged in transit"); return; }
-  if(!data || !Array.isArray(data.schedules) || !Array.isArray(data.tasks)){ toast("That link didn't contain StudyFlow data"); return; }
+  const data=normalizeIncoming(raw);
+  if(!data){ toast("That link didn't contain StudyFlow data"); return; }
   window.__incoming=data;
   const blocks=data.schedules.reduce((n,s)=>n+(s.blocks?s.blocks.length:0),0);
   const mine=state.schedules.length||state.tasks.length;
