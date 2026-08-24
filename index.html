@@ -1113,14 +1113,14 @@ function renderData(){
         <button class="btn btn-soft grow" onclick="document.getElementById('importArea').style.display='block'">⬆ Import</button>
       </div>
       <div id="importArea" style="display:none">
-        <p class="muted" style="margin-bottom:6px">Paste your backup below, or choose the file:</p>
+        <p class="muted" style="margin-bottom:6px">Paste a <b>phone link</b> or a backup here — either works. Or choose a backup file:</p>
         <input type="file" id="importFile" accept=".json" style="margin-bottom:8px" onchange="importFromFile(this)">
-        <textarea id="importText" placeholder='{"settings":…}'></textarea>
-        <button class="btn btn-primary btn-block" style="margin-top:8px" onclick="importFromText()">Restore backup</button>
+        <textarea id="importText" placeholder="Paste your phone link (https://…#d=…) or a backup"></textarea>
+        <button class="btn btn-primary btn-block" style="margin-top:8px" onclick="importFromText()">Load it in</button>
       </div>
     </div>
     <div class="card"><h2>📲 Your phone</h2>
-      <p class="muted" style="margin-bottom:10px">Each device keeps its own copy of your data. Make a link to carry everything across to your phone in one go.</p>
+      <p class="muted" style="margin-bottom:10px">Each device — and on iPhone, each <i>installed app</i> — keeps its own copy of your data. Make a link to carry everything across in one go.</p>
       <button class="btn btn-primary btn-block" onclick="openShareModal()">Make a link for my phone</button>
     </div>
     <div class="card"><h2>🌱 Fresh start</h2>
@@ -1160,14 +1160,44 @@ function importFromFile(input){
   r.onload=()=>{ document.getElementById("importText").value=r.result; importFromText(); };
   r.readAsText(f);
 }
-function importFromText(){
+/* Accepts either a backup JSON blob or a phone link. The link path matters on
+   iOS: a home-screen web app gets its own storage, separate from Safari, so the
+   only way in is to paste the link inside the installed app. */
+async function importFromText(){
+  const raw=(document.getElementById("importText").value||"").trim();
+  if(!raw){ toast("Paste a backup or a phone link first"); return; }
+
+  const hashAt=raw.indexOf("#d="), jAt=raw.indexOf("#j=");
+  let hash=null;
+  if(hashAt>-1) hash=raw.slice(hashAt);
+  else if(jAt>-1) hash=raw.slice(jAt);
+  else if(/^[dj]=/.test(raw)) hash="#"+raw;          // just the fragment
+  if(hash){
+    hash=hash.split(/\s/)[0];                         // drop anything after a newline
+    let data;
+    try{ data=normalizeIncoming(JSON.parse(await decodeShareHash(hash))); }
+    catch(e){
+      if(hash.startsWith("#d=") && typeof DecompressionStream!=="function")
+        toast("This browser can't read compressed links — make a compatibility link instead");
+      else toast("That link is damaged — copy the whole thing, start to finish");
+      return;
+    }
+    if(!data){ toast("That link didn't contain StudyFlow data"); return; }
+    applyImported(data);
+    toast("Loaded from your link ✓"); go("today"); return;
+  }
+
   try{
-    const data=JSON.parse(document.getElementById("importText").value);
-    if(!data||typeof data!=="object"||!Array.isArray(data.tasks)||!Array.isArray(data.schedules)) throw 0;
-    state.settings=Object.assign({dayStart:"07:00",dayEnd:"22:30",focusLen:45,breakLen:10,buffer:10},data.settings||{});
-    state.schedules=data.schedules; state.tasks=data.tasks; state.plans={};
+    const data=normalizeIncoming(JSON.parse(raw));
+    if(!data) throw 0;
+    applyImported(data);
     toast("Backup restored ✓"); go("today");
-  }catch(e){ toast("Hmm, that doesn't look like a StudyFlow backup"); }
+  }catch(e){ toast("That doesn't look like a StudyFlow backup or link"); }
+}
+function applyImported(data){
+  state.settings=Object.assign({dayStart:"07:00",dayEnd:"22:30",focusLen:45,breakLen:10,buffer:10},data.settings||{});
+  state.schedules=data.schedules; state.tasks=data.tasks; state.plans={};
+  persist();
 }
 function resetAll(){
   if(!confirm("Clear all schedules, tasks and plans?"))return;
@@ -1291,10 +1321,10 @@ function normalizeIncoming(data){
     return {settings:data.settings||{},schedules:data.schedules,tasks:data.tasks};
   return null;
 }
-async function buildShareLink(){
+async function buildShareLink(plain){
   const json=currentPayload();
   const base=location.origin+location.pathname;
-  if(typeof CompressionStream==="function"){
+  if(!plain && typeof CompressionStream==="function"){
     try{
       const cs=new CompressionStream("gzip");
       const w=cs.writable.getWriter();
@@ -1340,18 +1370,27 @@ function acceptIncoming(){
   state.schedules=d.schedules; state.tasks=d.tasks; state.plans={};
   window.__incoming=null; closeModal(); go("today"); toast("Loaded onto this device ✓");
 }
-async function openShareModal(){
+async function openShareModal(plain){
   openModal(`<h3>📲 Use StudyFlow on your phone</h3><p class="muted">Building your link…</p>`);
   let url;
-  try{ url=await buildShareLink(); }
+  try{ url=await buildShareLink(plain); }
   catch(e){ openModal(`<h3>📲 Use StudyFlow on your phone</h3><p class="muted">Couldn't build the link. Use Export backup instead.</p>`); return; }
   const kb=(url.length/1024).toFixed(1);
   openModal(`<h3>📲 Use StudyFlow on your phone</h3>
-    <p class="muted" style="margin-bottom:10px">This link opens StudyFlow <b>and</b> carries your schedules, tasks and settings across. Send it to yourself, then open it on your phone.</p>
-    <textarea id="shareUrl" readonly style="min-height:96px;font-size:11px;word-break:break-all">${esc(url)}</textarea>
-    <p class="tiny" style="margin:6px 0 10px">${kb} KB · one-time transfer, the two devices don't stay in sync afterwards.</p>
+    <p class="muted" style="margin-bottom:10px">This link carries your schedules, tasks and settings across. Send it to yourself, then follow the steps below <b>in this order</b>.</p>
+    <textarea id="shareUrl" readonly style="min-height:88px;font-size:11px;word-break:break-all">${esc(url)}</textarea>
+    <p class="tiny" style="margin:6px 0 10px">${kb} KB${plain?" · compatibility format, no compression":""} · one-time copy, the devices don't stay in sync.</p>
     <button class="btn btn-primary btn-block" onclick="copyShareUrl()">📋 Copy link</button>
-    <p class="tiny" style="margin-top:12px"><b>On iPhone:</b> open the link in Safari, then Share → <b>Add to Home Screen</b> so it installs like an app.</p>`);
+    <div class="warnbox" style="margin-top:14px">
+      <b>On iPhone, install first — then paste.</b><br>
+      An app added to your Home Screen gets its own storage, separate from Safari. Data you load in Safari will <i>not</i> appear in the installed app.
+      <ol style="margin:8px 0 0;padding-left:18px">
+        <li>Open <b>studyflow</b> in Safari → Share → <b>Add to Home Screen</b></li>
+        <li>Open the app <b>from your Home Screen</b></li>
+        <li>Inside the app: <b>Settings → Import</b>, paste this link, tap <b>Load it in</b></li>
+      </ol>
+    </div>
+    ${plain?"":`<button class="btn btn-soft btn-block btn-sm" style="margin-top:10px" onclick="openShareModal(true)">Link not working? Make a compatibility link</button>`}`);
 }
 function copyShareUrl(){
   const ta=document.getElementById("shareUrl");
