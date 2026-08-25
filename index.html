@@ -1322,6 +1322,7 @@ function newsCard(n){
     <div class="nfoot">
       <span class="nfrom">${esc(n.from||"UTD email")}${n.time?" · "+esc(n.time):""}</span>
       <span class="nacts">
+        <button class="icon-btn" title="Find this email in Outlook" onclick="openInOutlook('${n.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg></button>
         ${n.whenKey&&!n.taskAdded?`<button class="btn btn-soft btn-sm" onclick="newsToTask('${n.id}')">+ Task</button>`:""}
         ${n.taskAdded?`<span class="chip mint">✓ On your list</span>`:""}
         ${n.read
@@ -1332,6 +1333,32 @@ function newsCard(n){
   </div>`;
 }
 
+/* Outlook has no usable per-message URL from here: its message rows expose only
+   a short internal id, and the deeplink/read route wants a full Exchange item id
+   that the accessibility tree never publishes. A "?q=" search URL is ignored too.
+   So this copies the real subject line and opens Outlook — one paste into search
+   lands on the message, and nothing gets opened or marked read on the way. */
+function openInOutlook(id){
+  const n=state.news.find(x=>x.id===id);
+  // only ever copy the real subject — pasting the rewritten title finds nothing
+  const q=(n&&n.subject)||"";
+  const go=()=>window.open(OUTLOOK_URL,"_blank","noopener");
+  if(!q){ go(); toast("Opening Outlook — this one predates subject capture"); return; }
+  const done=ok=>{ go(); toast(ok?"Subject copied — paste it into Outlook's search 📋":"Opening Outlook — search for it by subject"); };
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(q).then(()=>done(true)).catch(()=>done(false));
+  } else {
+    // Safari on iOS blocks async clipboard writes outside a gesture chain
+    let ok=false;
+    try{
+      const ta=document.createElement("textarea");
+      ta.value=q; ta.style.position="fixed"; ta.style.opacity="0";
+      document.body.appendChild(ta); ta.select();
+      ok=document.execCommand("copy"); ta.remove();
+    }catch(e){}
+    done(ok);
+  }
+}
 function setNewsFilter(f){ state.newsFilter=f; render(); }
 function markNewsRead(id){
   const n=state.news.find(x=>x.id===id); if(!n) return;
@@ -1400,13 +1427,16 @@ function mergeNews(incoming, stamp){
 }
 /* Compact wire format, same spirit as the v2 share payload: positional arrays so
    the whole digest still fits in a URL.
-   [id, date, time, title, summary, catIndex, course, from, whenKey, whenText] */
+   [id, date, time, title, summary, catIndex, course, from, whenKey, whenText, subject]
+   `subject` is the real Outlook subject line, kept so "Find in Outlook" can copy
+   something that actually matches — `title` is a rewritten headline. Index 10 is
+   appended, so payloads written before it existed still unpack cleanly. */
 function unpackNews(p){
   const cats=NEWS_CATS.map(c=>c.key);
   return (p.i||[]).map(a=>({
     id:a[0], date:a[1]||todayKey(), time:a[2]||"", title:a[3]||"", summary:a[4]||"",
     cat:cats[a[5]]||"announce", course:a[6]||"", from:a[7]||"",
-    whenKey:a[8]||null, whenText:a[9]||""
+    whenKey:a[8]||null, whenText:a[9]||"", subject:a[10]||""
   }));
 }
 async function consumeNewsLink(){
